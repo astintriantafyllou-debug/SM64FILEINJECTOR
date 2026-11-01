@@ -1,0 +1,85 @@
+name: Build SM64 Ultimate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake
+          -S sm64-ultimate-save-editor
+          -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Install
+        run: cmake --install build --config Release
+
+      - name: Upload Windows application
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm64-ultimate-windows
+          path: stage/bin/**
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libgl1-mesa-dev \
+            libx11-dev \
+            libxext-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev
+
+      - name: Configure
+        run: >
+          cmake
+          -S sm64-ultimate-save-editor
+          -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Install
+        run: cmake --install build --prefix "${{ github.workspace }}/stage"
+
+      - name: Upload Linux application
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm64-ultimate-linux
+          path: stage/bin/**
+          if-no-files-found: error
