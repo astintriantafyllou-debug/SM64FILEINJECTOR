@@ -33,17 +33,19 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-    portable_file_dialogs
+    pfd
     GIT_REPOSITORY https://github.com/samhocevar/portable-file-dialogs.git
     GIT_TAG 0.1.0
     GIT_SHALLOW TRUE
 )
 
-FetchContent_MakeAvailable(
-    SDL2
-    imgui
-    portable_file_dialogs
-)
+FetchContent_MakeAvailable(SDL2 imgui)
+
+FetchContent_GetProperties(pfd)
+
+if(NOT pfd_POPULATED)
+    FetchContent_Populate(pfd)
+endif()
 
 find_package(OpenGL REQUIRED)
 
@@ -84,7 +86,7 @@ add_executable(
 target_include_directories(
     sm64-ultimate
     PRIVATE
-    ${portable_file_dialogs_SOURCE_DIR}
+    ${pfd_SOURCE_DIR}
 )
 
 target_link_libraries(
