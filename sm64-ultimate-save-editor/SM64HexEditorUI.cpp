@@ -77,7 +77,7 @@ void UI::dashboard() {
     );
     ImGui::Separator();
 
-    const float width = std::max(260.0F, (ImGui::GetContentRegionAvail().x - 16.0F) * 0.5F);
+    const float width = (std::max)(260.0F, (ImGui::GetContentRegionAvail().x - 16.0F) * 0.5F);
 
     for (int slotIndex = 0; slotIndex < 4; ++slotIndex) {
         const std::size_t base = sm64::P.at(static_cast<std::size_t>(slotIndex));
