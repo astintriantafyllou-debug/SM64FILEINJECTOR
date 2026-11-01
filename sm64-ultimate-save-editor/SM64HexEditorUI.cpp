@@ -203,17 +203,29 @@ void UI::beginner() {
                 std::uint8_t mask = bytes.at(base + 12U + static_cast<std::size_t>(course));
                 for (int star = 0; star < 7; ++star) {
                     ImGui::TableSetColumnIndex(star + 2);
-                    const auto bit = static_cast<std::uint8_t>(1U << static_cast<unsigned int>(star));
+                    ImGui::PushID(star);
+
+                    const auto bit = static_cast<std::uint8_t>(
+                        1U << static_cast<unsigned int>(star)
+                    );
                     bool collected = (mask & bit) != 0U;
 
                     if (ImGui::Checkbox("##Star", &collected)) {
                         if (collected) {
                             mask = static_cast<std::uint8_t>(mask | bit);
                         } else {
-                            mask = static_cast<std::uint8_t>(mask & static_cast<std::uint8_t>(~bit));
+                            mask = static_cast<std::uint8_t>(
+                                mask & static_cast<std::uint8_t>(~bit)
+                            );
                         }
-                        c.setMirrored(slotIndex, 12U + static_cast<std::size_t>(course), mask);
+                        c.setMirrored(
+                            slotIndex,
+                            12U + static_cast<std::size_t>(course),
+                            mask
+                        );
                     }
+
+                    ImGui::PopID();
                 }
 
                 ImGui::PopID();
