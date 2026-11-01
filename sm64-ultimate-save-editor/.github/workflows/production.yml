@@ -1,19 +1,110 @@
-name: production
-on: [push, pull_request, workflow_dispatch]
-permissions: {contents: read}
+name: Build SM64 Ultimate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
-    runs-on: ${{ matrix.os }}
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/stage
-      - run: cmake --build build --config Release --parallel
-      - run: cmake --install build --config Release
-      - uses: actions/upload-artifact@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Install
+        run: cmake --install build --config Release
+
+      - name: Upload Windows application
+        uses: actions/upload-artifact@v4
         with:
-          name: sm64-ultimate-${{ matrix.os }}
-          path: stage/**
+          name: sm64-ultimate-windows
+          path: stage/bin/**
+          if-no-files-found: error
+
+  linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libgl1-mesa-dev \
+            libx11-dev \
+            libxext-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Install
+        run: cmake --install build --prefix "${{ github.workspace }}/stage"
+
+      - name: Upload Linux application
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm64-ultimate-linux
+          path: stage/bin/**
+          if-no-files-found: error
+
+  macos:
+    name: Build macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Install
+        run: cmake --install build --prefix "${{ github.workspace }}/stage"
+
+      - name: Upload macOS application
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm64-ultimate-macos
+          path: |
+            stage/bin/**
+            stage/*.app/**
+          if-no-files-found: error
