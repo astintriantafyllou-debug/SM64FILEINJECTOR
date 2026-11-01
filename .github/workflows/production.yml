@@ -20,13 +20,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure
-        run: >
-          cmake
-          -S sm64-ultimate-save-editor
-          -B build
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+        shell: pwsh
+        run: |
+          cmake `
+            -S sm64-ultimate-save-editor `
+            -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
 
       - name: Build
         run: cmake --build build --config Release --parallel
@@ -65,19 +65,18 @@ jobs:
             libxinerama-dev
 
       - name: Configure
-        run: >
-          cmake
-          -S sm64-ultimate-save-editor
-          -B build
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+        run: |
+          cmake \
+            -S sm64-ultimate-save-editor \
+            -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
 
       - name: Build
-        run: cmake --build build --parallel
+        run: cmake --build build --config Release --parallel
 
       - name: Install
-        run: cmake --install build --prefix "${{ github.workspace }}/stage"
+        run: cmake --install build --config Release
 
       - name: Upload Linux application
         uses: actions/upload-artifact@v4
