@@ -26,7 +26,8 @@ public:
         ++openCalls;
         return nextOpen;
     }
-    std::optional<fs::path> saveFileDialog(const std::string&, const fs::path&, const std::vector<std::string>&) override {
+    std::optional<fs::path> saveFileDialog(const std::string&, const fs::path&,
+                                           const std::vector<std::string>&) override {
         ++saveCalls;
         return nextSave;
     }
@@ -62,7 +63,8 @@ struct TempDir {
     fs::path path;
     TempDir() {
         static int n = 0;
-        path = fs::temp_directory_path() / ("sm64flow_" + std::to_string(++n) + "_" + std::to_string(reinterpret_cast<std::uintptr_t>(this) % 99991U));
+        path = fs::temp_directory_path() / ("sm64flow_" + std::to_string(++n) + "_" +
+                                            std::to_string(reinterpret_cast<std::uintptr_t>(this) % 99991U));
         fs::remove_all(path);
         fs::create_directories(path);
     }
@@ -197,12 +199,12 @@ TEST("flow: opening or quitting with unsaved changes asks first") {
     App app(core, platform, quietSettings(), {});
     app.openPath(file);
 
-    app.actionOpen();                       // clean: goes straight to the file dialog
+    app.actionOpen();  // clean: goes straight to the file dialog
     CHECK_EQ(platform.openCalls, 1);
     CHECK(app.openDialogKind() == Dialog::None);
 
     CHECK(core.setFlag(0, sm64::save_flag::HaveKey1, true));
-    app.actionOpen();                       // dirty: must warn, must not open the dialog yet
+    app.actionOpen();  // dirty: must warn, must not open the dialog yet
     CHECK(app.openDialogKind() == Dialog::Unsaved);
     CHECK_EQ(platform.openCalls, 1);
 
@@ -314,7 +316,10 @@ TEST("flow: Create backup copy writes a timestamped copy and leaves the original
 TEST("flow: rejecting a bad file keeps the previous data and reports an error") {
     Env env;
     TempDir dir;
-    { std::ofstream out(dir.path / "bad.eep", std::ios::binary); out << "too small"; }
+    {
+        std::ofstream out(dir.path / "bad.eep", std::ios::binary);
+        out << "too small";
+    }
     sm64::Core core;
     FakePlatform platform;
     App app(core, platform, quietSettings(), {});

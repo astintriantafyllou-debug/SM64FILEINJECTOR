@@ -28,15 +28,22 @@ TEST("JSON report is well formed and reports validity and star totals") {
     for (std::size_t i = 0; i < json.size(); ++i) {
         const char ch = json[i];
         if (inString) {
-            if (ch == '\\') ++i;
-            else if (ch == '"') inString = false;
+            if (ch == '\\')
+                ++i;
+            else if (ch == '"')
+                inString = false;
             continue;
         }
-        if (ch == '"') inString = true;
-        else if (ch == '{') ++depthBrace;
-        else if (ch == '}') --depthBrace;
-        else if (ch == '[') ++depthBracket;
-        else if (ch == ']') --depthBracket;
+        if (ch == '"')
+            inString = true;
+        else if (ch == '{')
+            ++depthBrace;
+        else if (ch == '}')
+            --depthBrace;
+        else if (ch == '[')
+            ++depthBracket;
+        else if (ch == ']')
+            --depthBracket;
         CHECK(depthBrace >= 0 && depthBracket >= 0);
     }
     CHECK_EQ(depthBrace, 0);

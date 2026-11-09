@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_DIR: sm64-ultimate-save-editor
+
+jobs:
+  build:
+    name: Package ${{ matrix.artifact }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: SM64-Ultimate-Windows-x64
+          - os: ubuntu-latest
+            artifact: SM64-Ultimate-Linux-x64
+          - os: macos-latest
+            artifact: SM64-Ultimate-macOS
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches the project version
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/^ *VERSION \([0-9][0-9.]*\)$/\1/p' "$PROJECT_DIR/CMakeLists.txt" | head -1)
+          test -n "$VERSION"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match CMake version v$VERSION" >&2
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git libgl1-mesa-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxss-dev libxkbcommon-dev
+
+      - name: Configure
+        shell: bash
+        run: cmake -S "$PROJECT_DIR" -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Stage and zip
+        shell: bash
+        run: |
+          cmake --install build --config Release --prefix stage
+          cmake -E tar cf "${{ matrix.artifact }}-v${VERSION}.zip" --format=zip -- stage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-v${{ env.VERSION }}
+          path: ${{ matrix.artifact }}-v${{ env.VERSION }}.zip
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l dist
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --repo "$GITHUB_REPOSITORY" \
+            --title "SM64 Ultimate Save Editor $GITHUB_REF_NAME" --generate-notes

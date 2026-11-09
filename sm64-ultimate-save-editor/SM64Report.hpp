@@ -17,8 +17,7 @@ namespace sm64 {
 [[nodiscard]] std::string jsonEscape(std::string_view text);
 
 // Machine-readable report of the image: layout validation plus per-slot summary.
-[[nodiscard]] std::string buildJsonReport(const EepromBytes& bytes, std::string_view fileName,
-                                          ByteOrder order);
+[[nodiscard]] std::string buildJsonReport(const EepromBytes& bytes, std::string_view fileName, ByteOrder order);
 
 // Plain-text validation report (one line per block, then repair guidance).
 [[nodiscard]] std::string buildValidationText(const EepromBytes& bytes, std::string_view fileName);

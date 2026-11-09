@@ -56,15 +56,14 @@ class Platform {
 public:
     virtual ~Platform() = default;
     virtual std::optional<std::filesystem::path> openFileDialog(const std::string& title) = 0;
-    virtual std::optional<std::filesystem::path> saveFileDialog(
-        const std::string& title, const std::filesystem::path& suggested,
-        const std::vector<std::string>& extensions) = 0;
+    virtual std::optional<std::filesystem::path> saveFileDialog(const std::string& title,
+                                                                const std::filesystem::path& suggested,
+                                                                const std::vector<std::string>& extensions) = 0;
 };
 
 class App {
 public:
-    App(sm64::Core& core, Platform& platform, sm64::Settings settings,
-        std::filesystem::path settingsPath);
+    App(sm64::Core& core, Platform& platform, sm64::Settings settings, std::filesystem::path settingsPath);
 
     // Draws the whole UI for the current ImGui frame (call between NewFrame and Render).
     void render();
@@ -72,8 +71,8 @@ public:
     // ---- integration with the host window ---------------------------------
     [[nodiscard]] std::string windowTitle() const;
     [[nodiscard]] bool quitRequested() const noexcept { return quit_; }
-    void requestQuit();                            // e.g. window close button
-    void openPath(const std::filesystem::path&);   // drag-and-drop / command line
+    void requestQuit();                           // e.g. window close button
+    void openPath(const std::filesystem::path&);  // drag-and-drop / command line
     [[nodiscard]] const sm64::Settings& settings() const noexcept { return settings_; }
     // True once when the theme or scale changed and the host must rebuild style/fonts.
     [[nodiscard]] bool takeStyleDirty() noexcept {
@@ -154,8 +153,7 @@ private:
     void saveThen(std::function<void()> next);
     void createBackupCopy();
     void exportTo(const std::filesystem::path& path);
-    void writeReport(const std::string& defaultName, const std::string& extension,
-                     const std::string& text);
+    void writeReport(const std::string& defaultName, const std::string& extension, const std::string& text);
     void openPresetDialog(sm64::PresetId id);
     void notice(const std::string& title, const std::string& text);
     void toast(const std::string& text, Status level);

@@ -44,8 +44,7 @@ struct BlockState {
     [[nodiscard]] bool valid() const noexcept { return magic && checksum; }
 };
 
-[[nodiscard]] BlockState inspectBlock(const std::uint8_t* data, std::size_t size,
-                                      std::uint16_t magic) noexcept;
+[[nodiscard]] BlockState inspectBlock(const std::uint8_t* data, std::size_t size, std::uint16_t magic) noexcept;
 
 // A freshly erased EEPROM exactly as the game would write it: four zeroed,
 // correctly signed save slots (mirrored) and the default menu block that
@@ -77,9 +76,7 @@ struct Report {
     std::vector<std::string> notes;
     std::array<PairReport, kPairCount> pairs{};  // A, B, C, D, menu
 
-    [[nodiscard]] const BlockState& block(std::size_t id) const noexcept {
-        return id < 8U ? slots[id] : menu[id - 8U];
-    }
+    [[nodiscard]] const BlockState& block(std::size_t id) const noexcept { return id < 8U ? slots[id] : menu[id - 8U]; }
 };
 
 [[nodiscard]] Report validateBytes(const EepromBytes& bytes);
@@ -109,8 +106,7 @@ struct RegionInfo {
     std::string field;  // e.g. "Flags (byte 2 of 4)"
 };
 [[nodiscard]] RegionInfo describeOffset(std::size_t offset);
-[[nodiscard]] std::vector<FieldChange> describeChanges(const EepromBytes& before,
-                                                       const EepromBytes& after);
+[[nodiscard]] std::vector<FieldChange> describeChanges(const EepromBytes& before, const EepromBytes& after);
 
 // --------------------------------------------------------------------------
 // Export profiles
@@ -157,16 +153,15 @@ struct GameSharkOptions {
 struct GameSharkResult {
     bool ok{false};
     std::string error;
-    std::string text;                // full text including comments
-    std::vector<std::string> codes;  // code lines only
+    std::string text;                      // full text including comments
+    std::vector<std::string> codes;        // code lines only
     std::vector<std::size_t> codeOffsets;  // EEPROM offset each code line starts at
     std::size_t byte8Count{};
     std::size_t byte16Count{};
     std::size_t firstOffset{};
     std::size_t lastOffset{};
 };
-[[nodiscard]] GameSharkResult generateGameShark(const EepromBytes& current,
-                                                const EepromBytes& original,
+[[nodiscard]] GameSharkResult generateGameShark(const EepromBytes& current, const EepromBytes& original,
                                                 const GameSharkOptions& options);
 
 // --------------------------------------------------------------------------
@@ -181,8 +176,7 @@ struct AtomicWriteOptions {
 // the exact size, optionally backs up the existing file, then renames over the
 // destination. The destination is never removed or truncated before the new
 // content is complete: on any failure the original is left untouched.
-[[nodiscard]] bool atomicWriteFile(const std::filesystem::path& path,
-                                   std::span<const std::uint8_t> bytes,
+[[nodiscard]] bool atomicWriteFile(const std::filesystem::path& path, std::span<const std::uint8_t> bytes,
                                    const AtomicWriteOptions& options, std::string& error);
 
 [[nodiscard]] std::filesystem::path backupPathFor(const std::filesystem::path& path);
@@ -237,9 +231,7 @@ public:
     [[nodiscard]] bool dirty() const noexcept { return data_ != saved_; }
     [[nodiscard]] SlotImage slotImage(int slot) const;
     [[nodiscard]] StarSummary stars(int slot) const;
-    [[nodiscard]] std::vector<FieldChange> pendingChanges() const {
-        return describeChanges(saved_, data_);
-    }
+    [[nodiscard]] std::vector<FieldChange> pendingChanges() const { return describeChanges(saved_, data_); }
 
     // ---- editing (each call is one undoable history entry) ----------------
     // Raw edits do NOT touch checksums, so a raw edit is visible as an invalid block.
@@ -249,8 +241,7 @@ public:
 
     // Structured edits modify the slot and keep both copies synchronized with
     // freshly computed signatures.
-    bool editSlot(int slot, const std::string& description,
-                  const std::function<void(SlotImage&)>& mutate,
+    bool editSlot(int slot, const std::string& description, const std::function<void(SlotImage&)>& mutate,
                   const std::string& coalesceKey = {});
     bool setFlag(int slot, std::uint32_t mask, bool on);
     bool setCoinScore(int slot, std::size_t course, int value);  // clamped to 0..255
@@ -259,8 +250,7 @@ public:
     bool setSecretStarFlag(int slot, std::size_t secretIndex, bool on);
 
     // Generic undoable replacement of the whole image.
-    bool applyEdit(const std::string& description, const Bytes& after,
-                   const std::string& coalesceKey = {});
+    bool applyEdit(const std::string& description, const Bytes& after, const std::string& coalesceKey = {});
 
     // ---- validation & repair ---------------------------------------------
     [[nodiscard]] Report validate() const { return validateBytes(data_); }
@@ -279,8 +269,7 @@ public:
     void normalize();
 
     // ---- GameShark --------------------------------------------------------
-    [[nodiscard]] std::string gameShark(std::uint32_t address, bool use16Bit,
-                                        bool includeAll) const;
+    [[nodiscard]] std::string gameShark(std::uint32_t address, bool use16Bit, bool includeAll) const;
     [[nodiscard]] GameSharkResult gameSharkCodes(const GameSharkOptions& options) const {
         return generateGameShark(data_, original_, options);
     }

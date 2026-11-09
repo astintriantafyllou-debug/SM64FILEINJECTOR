@@ -52,16 +52,26 @@ Options parseArgs(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         auto next = [&]() -> std::string { return i + 1 < argc ? std::string(argv[++i]) : std::string(); };
-        if (a == "--frames") o.frames = std::atoi(next().c_str());
-        else if (a == "--screenshot") o.screenshot = next();
-        else if (a == "--page") o.page = std::atoi(next().c_str());
-        else if (a == "--expert") o.expert = true;
-        else if (a == "--size") std::sscanf(next().c_str(), "%dx%d", &o.width, &o.height);
-        else if (a == "--dpi") o.dpi = static_cast<float>(std::atof(next().c_str()));
-        else if (a == "--settings") o.settingsFile = next();
-        else if (a == "--no-tour") o.noTour = true;
-        else if (a == "--slot") o.slot = std::atoi(next().c_str());
-        else if (!a.empty() && a[0] != '-') o.file = a;
+        if (a == "--frames")
+            o.frames = std::atoi(next().c_str());
+        else if (a == "--screenshot")
+            o.screenshot = next();
+        else if (a == "--page")
+            o.page = std::atoi(next().c_str());
+        else if (a == "--expert")
+            o.expert = true;
+        else if (a == "--size")
+            std::sscanf(next().c_str(), "%dx%d", &o.width, &o.height);
+        else if (a == "--dpi")
+            o.dpi = static_cast<float>(std::atof(next().c_str()));
+        else if (a == "--settings")
+            o.settingsFile = next();
+        else if (a == "--no-tour")
+            o.noTour = true;
+        else if (a == "--slot")
+            o.slot = std::atoi(next().c_str());
+        else if (!a.empty() && a[0] != '-')
+            o.file = a;
     }
     return o;
 }
@@ -70,18 +80,22 @@ Options parseArgs(int argc, char** argv) {
 class NativePlatform final : public sm64ui::Platform {
 public:
     std::optional<std::filesystem::path> openFileDialog(const std::string& title) override {
-        const auto result = pfd::open_file(title, "", {"SM64 saves (*.eep *.bin *.sav)", "*.eep *.bin *.sav", "All files", "*"}).result();
+        const auto result =
+            pfd::open_file(title, "", {"SM64 saves (*.eep *.bin *.sav)", "*.eep *.bin *.sav", "All files", "*"})
+                .result();
         if (result.empty()) return std::nullopt;
         return std::filesystem::path(result.front());
     }
-    std::optional<std::filesystem::path> saveFileDialog(const std::string& title, const std::filesystem::path& suggested,
+    std::optional<std::filesystem::path> saveFileDialog(const std::string& title,
+                                                        const std::filesystem::path& suggested,
                                                         const std::vector<std::string>& extensions) override {
         std::string pattern;
         for (const std::string& e : extensions) pattern += (pattern.empty() ? "*" : " *") + e;
         if (pattern.empty()) pattern = "*";
         // The application asks for overwrite confirmation itself.
         const std::string chosen = pfd::save_file(title, suggested.string(), {"Save files", pattern, "All files", "*"},
-                                                  pfd::opt::force_overwrite).result();
+                                                  pfd::opt::force_overwrite)
+                                       .result();
         if (chosen.empty()) return std::nullopt;
         return std::filesystem::path(chosen);
     }
@@ -126,7 +140,8 @@ bool writePpm(const std::string& file, int width, int height) {
     if (!out) return false;
     out << "P6\n" << width << " " << height << "\n255\n";
     for (int y = height - 1; y >= 0; --y) {
-        out.write(reinterpret_cast<const char*>(pixels.data() + static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 3U),
+        out.write(reinterpret_cast<const char*>(pixels.data() +
+                                                static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 3U),
                   static_cast<std::streamsize>(width) * 3);
     }
     return static_cast<bool>(out);
@@ -224,7 +239,8 @@ int main(int argc, char** argv) {
     sm64::Core core;
     NativePlatform platform;
     auto app = std::make_unique<sm64ui::App>(core, platform, settings, settingsPath);
-    if (options.page >= 0 && options.page < static_cast<int>(sm64ui::kPageCount)) app->setPage(static_cast<sm64ui::Page>(options.page));
+    if (options.page >= 0 && options.page < static_cast<int>(sm64ui::kPageCount))
+        app->setPage(static_cast<sm64ui::Page>(options.page));
     app->setSlot(std::clamp(options.slot, 0, 3));
     if (!options.file.empty()) app->openPath(options.file);
 

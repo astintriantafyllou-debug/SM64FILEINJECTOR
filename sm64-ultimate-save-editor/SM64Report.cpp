@@ -14,11 +14,16 @@ std::string hex(unsigned value, int width) {
 
 const char* statusName(PairStatus status) {
     switch (status) {
-        case PairStatus::BothValidIdentical: return "both-valid-identical";
-        case PairStatus::BothValidDifferent: return "both-valid-different";
-        case PairStatus::OnlyPrimaryValid: return "only-primary-valid";
-        case PairStatus::OnlyBackupValid: return "only-backup-valid";
-        case PairStatus::BothInvalid: return "both-invalid";
+        case PairStatus::BothValidIdentical:
+            return "both-valid-identical";
+        case PairStatus::BothValidDifferent:
+            return "both-valid-different";
+        case PairStatus::OnlyPrimaryValid:
+            return "only-primary-valid";
+        case PairStatus::OnlyBackupValid:
+            return "only-backup-valid";
+        case PairStatus::BothInvalid:
+            return "both-invalid";
     }
     return "unknown";
 }
@@ -26,8 +31,7 @@ const char* statusName(PairStatus status) {
 std::string blockName(std::size_t id) {
     const BlockInfo info = blockInfo(id);
     if (info.isMenu) return info.isBackup ? "menu-backup" : "menu-primary";
-    return std::string("slot-") + static_cast<char>('A' + info.slot) +
-           (info.isBackup ? "-backup" : "-primary");
+    return std::string("slot-") + static_cast<char>('A' + info.slot) + (info.isBackup ? "-backup" : "-primary");
 }
 
 }  // namespace
@@ -51,11 +55,21 @@ std::string jsonEscape(std::string_view text) {
     std::string out;
     for (const char ch : text) {
         switch (ch) {
-            case '"': out += "\\\""; break;
-            case '\\': out += "\\\\"; break;
-            case '\n': out += "\\n"; break;
-            case '\r': out += "\\r"; break;
-            case '\t': out += "\\t"; break;
+            case '"':
+                out += "\\\"";
+                break;
+            case '\\':
+                out += "\\\\";
+                break;
+            case '\n':
+                out += "\\n";
+                break;
+            case '\r':
+                out += "\\r";
+                break;
+            case '\t':
+                out += "\\t";
+                break;
             default:
                 if (static_cast<unsigned char>(ch) < 0x20U) {
                     out += "\\u" + hex(static_cast<unsigned char>(ch), 4);
@@ -83,15 +97,15 @@ std::string buildJsonReport(const EepromBytes& bytes, std::string_view fileName,
         const BlockState& s = report.block(id);
         j += "    {\"name\": \"" + blockName(id) + "\", \"offset\": " + std::to_string(info.offset) +
              ", \"size\": " + std::to_string(info.size) + ", \"magicOk\": " + (s.magic ? "true" : "false") +
-             ", \"checksumOk\": " + (s.checksum ? "true" : "false") + ", \"stored\": \"" +
-             hex(s.stored, 4) + "\", \"computed\": \"" + hex(s.computed, 4) + "\"}" +
-             (id + 1U < kBlockCount ? "," : "") + "\n";
+             ", \"checksumOk\": " + (s.checksum ? "true" : "false") + ", \"stored\": \"" + hex(s.stored, 4) +
+             "\", \"computed\": \"" + hex(s.computed, 4) + "\"}" + (id + 1U < kBlockCount ? "," : "") + "\n";
     }
     j += "  ],\n  \"pairs\": [\n";
     for (std::size_t p = 0; p < kPairCount; ++p) {
-        j += std::string("    {\"name\": \"") + (p < kSlotCount ? std::string("slot-") + static_cast<char>('A' + p) : "menu") +
-             "\", \"status\": \"" + statusName(report.pairs[p].status) + "\", \"differingBytes\": " +
-             std::to_string(report.pairs[p].differingOffsets.size()) + "}" +
+        j += std::string("    {\"name\": \"") +
+             (p < kSlotCount ? std::string("slot-") + static_cast<char>('A' + p) : "menu") + "\", \"status\": \"" +
+             statusName(report.pairs[p].status) +
+             "\", \"differingBytes\": " + std::to_string(report.pairs[p].differingOffsets.size()) + "}" +
              (p + 1U < kPairCount ? "," : "") + "\n";
     }
     j += "  ],\n  \"slots\": [\n";
@@ -101,11 +115,11 @@ std::string buildJsonReport(const EepromBytes& bytes, std::string_view fileName,
                     image.begin());
         const StarSummary stars = summarizeStars(image);
         const std::uint32_t flags = slotFlags(image);
-        j += std::string("    {\"slot\": \"") + static_cast<char>('A' + slot) + "\", \"flags\": \"" +
-             hex(flags, 8) + "\", \"occupied\": " + ((flags & save_flag::FileExists) != 0U ? "true" : "false") +
-             ", \"totalStars\": " + std::to_string(stars.total) + ", \"mainStars\": " +
-             std::to_string(stars.mainStars) + ", \"secretStars\": " + std::to_string(stars.secretStars) +
-             ", \"coinScores\": [";
+        j += std::string("    {\"slot\": \"") + static_cast<char>('A' + slot) + "\", \"flags\": \"" + hex(flags, 8) +
+             "\", \"occupied\": " + ((flags & save_flag::FileExists) != 0U ? "true" : "false") +
+             ", \"totalStars\": " + std::to_string(stars.total) +
+             ", \"mainStars\": " + std::to_string(stars.mainStars) +
+             ", \"secretStars\": " + std::to_string(stars.secretStars) + ", \"coinScores\": [";
         for (std::size_t c = 0; c < slot_field::CoinScoreCount; ++c) {
             j += std::to_string(coinScore(image, c)) + (c + 1U < slot_field::CoinScoreCount ? ", " : "");
         }
@@ -124,9 +138,8 @@ std::string buildValidationText(const EepromBytes& bytes, std::string_view fileN
         const BlockState& s = report.block(id);
         const BlockInfo info = blockInfo(id);
         t += blockName(id) + " @0x" + hex(static_cast<unsigned>(info.offset), 3) + ": signature " +
-             (s.magic ? "OK" : "BAD") + " (0x" + hex(s.storedMagic, 4) + "), checksum " +
-             (s.checksum ? "OK" : "BAD") + " (stored " + hex(s.stored, 4) + ", computed " +
-             hex(s.computed, 4) + ")\n";
+             (s.magic ? "OK" : "BAD") + " (0x" + hex(s.storedMagic, 4) + "), checksum " + (s.checksum ? "OK" : "BAD") +
+             " (stored " + hex(s.stored, 4) + ", computed " + hex(s.computed, 4) + ")\n";
     }
     t += "\n";
     for (std::size_t p = 0; p < kPairCount; ++p) {

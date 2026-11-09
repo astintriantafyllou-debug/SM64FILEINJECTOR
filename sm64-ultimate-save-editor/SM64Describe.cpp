@@ -9,10 +9,9 @@ namespace {
 
 // Names of courseStars[15..24] (the bonus stages), per levels/course_defines.h.
 constexpr std::array<const char*, 10> kBonusByteNames{
-    "Bowser in the Dark World", "Bowser in the Fire Sea", "Bowser in the Sky",
-    "Princess's Secret Slide",  "Cavern of the Metal Cap", "Tower of the Wing Cap",
-    "Vanish Cap Under the Moat", "Wing Mario Over the Rainbow", "The Secret Aquarium",
-    "Unused (cake ending entry)"};
+    "Bowser in the Dark World", "Bowser in the Fire Sea",    "Bowser in the Sky",         "Princess's Secret Slide",
+    "Cavern of the Metal Cap",  "Tower of the Wing Cap",     "Vanish Cap Under the Moat", "Wing Mario Over the Rainbow",
+    "The Secret Aquarium",      "Unused (cake ending entry)"};
 
 std::string fmt(const char* format, unsigned a = 0, unsigned b = 0, unsigned c = 0) {
     char text[160]{};
@@ -25,9 +24,13 @@ std::string courseStarByteName(std::size_t index) {
     return kBonusByteNames[index - kMainCourseCount];
 }
 
-std::string slotLetterName(int slot) { return std::string(1U, static_cast<char>('A' + slot)); }
+std::string slotLetterName(int slot) {
+    return std::string(1U, static_cast<char>('A' + slot));
+}
 
-std::string onOff(bool v) { return v ? "on" : "off"; }
+std::string onOff(bool v) {
+    return v ? "on" : "off";
+}
 
 std::string starsText(std::uint8_t byte) {
     return std::to_string(popcount7(byte)) + " star(s) [" + fmt("%02X", byte & 0x7FU) + "]";
@@ -50,19 +53,27 @@ RegionInfo describeOffset(std::size_t offset) {
 
         if (block.isMenu) {
             info.name = block.isBackup ? "Menu block backup" : "Menu block primary";
-            if (r < 16U) info.field = "Coin-score ages, file " + slotLetterName(static_cast<int>(r / 4U)) +
-                                      " (byte " + std::to_string(r % 4U) + " of 4)";
-            else if (r < 18U) info.field = "Sound mode (u16)";
-            else if (r < 28U) info.field = "Padding (EU builds keep the language in bytes 18-19)";
-            else if (r < 30U) info.field = "Signature 'HI' (0x4849)";
-            else info.field = "Checksum (big-endian u16)";
+            if (r < 16U)
+                info.field = "Coin-score ages, file " + slotLetterName(static_cast<int>(r / 4U)) + " (byte " +
+                             std::to_string(r % 4U) + " of 4)";
+            else if (r < 18U)
+                info.field = "Sound mode (u16)";
+            else if (r < 28U)
+                info.field = "Padding (EU builds keep the language in bytes 18-19)";
+            else if (r < 30U)
+                info.field = "Signature 'HI' (0x4849)";
+            else
+                info.field = "Checksum (big-endian u16)";
             return info;
         }
 
         info.name = "Slot " + slotLetterName(block.slot) + (block.isBackup ? " backup" : " primary");
-        if (r == slot_field::CapLevel) info.field = "Lost-cap level";
-        else if (r == slot_field::CapArea) info.field = "Lost-cap area";
-        else if (r < slot_field::Flags) info.field = "Lost-cap position (x/y/z s16)";
+        if (r == slot_field::CapLevel)
+            info.field = "Lost-cap level";
+        else if (r == slot_field::CapArea)
+            info.field = "Lost-cap area";
+        else if (r < slot_field::Flags)
+            info.field = "Lost-cap position (x/y/z s16)";
         else if (r < slot_field::CourseStars) {
             info.field = "Flags (byte " + std::to_string(r - slot_field::Flags) + " of 4, big-endian)";
         } else if (r < slot_field::CoinScores) {
@@ -95,8 +106,7 @@ std::vector<FieldChange> describeChanges(const EepromBytes& before, const Eeprom
         const std::uint32_t fb = slotFlags(b);
         for (const FlagInfo& flag : kFlagTable) {
             if ((fa & flag.mask) != (fb & flag.mask)) {
-                changes.push_back({prefix + flag.name, onOff((fa & flag.mask) != 0U),
-                                   onOff((fb & flag.mask) != 0U)});
+                changes.push_back({prefix + flag.name, onOff((fa & flag.mask) != 0U), onOff((fb & flag.mask) != 0U)});
                 contentChanged = true;
             }
         }
@@ -113,8 +123,8 @@ std::vector<FieldChange> describeChanges(const EepromBytes& before, const Eeprom
         std::uint32_t known = save_flag::CastleStarMask;
         for (const FlagInfo& flag : kFlagTable) known |= flag.mask;
         if ((fa & ~known) != (fb & ~known)) {
-            changes.push_back({prefix + "Other flag bits", "0x" + fmt("%08X", fa & ~known),
-                               "0x" + fmt("%08X", fb & ~known)});
+            changes.push_back(
+                {prefix + "Other flag bits", "0x" + fmt("%08X", fa & ~known), "0x" + fmt("%08X", fb & ~known)});
             contentChanged = true;
         }
 
@@ -127,8 +137,8 @@ std::vector<FieldChange> describeChanges(const EepromBytes& before, const Eeprom
                 changes.push_back({label + " stars", starsText(ba), starsText(bb)});
             }
             if ((ba & kCannonBit) != (bb & kCannonBit)) {
-                changes.push_back({label + " byte: cannon flag", onOff((ba & kCannonBit) != 0U),
-                                   onOff((bb & kCannonBit) != 0U)});
+                changes.push_back(
+                    {label + " byte: cannon flag", onOff((ba & kCannonBit) != 0U), onOff((bb & kCannonBit) != 0U)});
             }
             contentChanged = true;
         }
@@ -141,8 +151,8 @@ std::vector<FieldChange> describeChanges(const EepromBytes& before, const Eeprom
         }
         for (std::size_t i = slot_field::CapLevel; i < slot_field::Flags; ++i) {
             if (a[i] != b[i]) {
-                changes.push_back({prefix + "Lost-cap location byte " + std::to_string(i),
-                                   fmt("0x%02X", a[i]), fmt("0x%02X", b[i])});
+                changes.push_back(
+                    {prefix + "Lost-cap location byte " + std::to_string(i), fmt("0x%02X", a[i]), fmt("0x%02X", b[i])});
                 contentChanged = true;
             }
         }
@@ -168,8 +178,8 @@ std::vector<FieldChange> describeChanges(const EepromBytes& before, const Eeprom
         }
 
         if (!contentChanged) {
-            const bool sigChanged = !std::equal(a.begin() + slot_field::Signature, a.end(),
-                                                b.begin() + slot_field::Signature);
+            const bool sigChanged =
+                !std::equal(a.begin() + slot_field::Signature, a.end(), b.begin() + slot_field::Signature);
             if (sigChanged) {
                 changes.push_back({prefix + "Signature / checksum", fmt("%04X", readBe16(a.data() + 54)),
                                    fmt("%04X", readBe16(b.data() + 54))});

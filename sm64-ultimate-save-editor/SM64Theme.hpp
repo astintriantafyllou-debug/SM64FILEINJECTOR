@@ -15,9 +15,9 @@ struct Palette {
     ImVec4 warning;
     ImVec4 bad;
     ImVec4 info;
-    ImVec4 wing;     // red cap switch
-    ImVec4 metal;    // green cap switch
-    ImVec4 vanish;   // blue cap switch
+    ImVec4 wing;    // red cap switch
+    ImVec4 metal;   // green cap switch
+    ImVec4 vanish;  // blue cap switch
     ImVec4 accent;
     ImVec4 muted;
     ImVec4 changed;  // "differs from the saved file" highlight
@@ -43,7 +43,7 @@ void statusIcon(Status status);
 void statusLabel(Status status, const char* text);
 
 void drawStar(ImDrawList* list, ImVec2 center, float radius, ImU32 color);
-void drawRing(ImDrawList* list, ImVec2 center, float radius, float thickness, float fraction,
-              ImU32 trackColor, ImU32 fillColor);
+void drawRing(ImDrawList* list, ImVec2 center, float radius, float thickness, float fraction, ImU32 trackColor,
+              ImU32 fillColor);
 
 }  // namespace sm64ui

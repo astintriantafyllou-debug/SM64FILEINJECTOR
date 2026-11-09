@@ -1,6 +1,5 @@
 #include "SM64Theme.hpp"
 
-
 #include <algorithm>
 #include <cmath>
 
@@ -10,27 +9,29 @@ namespace {
 Palette gPalette{};
 
 ImVec4 rgba(int r, int g, int b, float a = 1.0F) {
-    return ImVec4(static_cast<float>(r) / 255.0F, static_cast<float>(g) / 255.0F,
-                  static_cast<float>(b) / 255.0F, a);
+    return ImVec4(static_cast<float>(r) / 255.0F, static_cast<float>(g) / 255.0F, static_cast<float>(b) / 255.0F, a);
 }
 
-ImVec4 withAlpha(ImVec4 c, float a) { return ImVec4(c.x, c.y, c.z, a); }
+ImVec4 withAlpha(ImVec4 c, float a) {
+    return ImVec4(c.x, c.y, c.z, a);
+}
 
 ImVec4 scaleRgb(ImVec4 c, float f) {
-    return ImVec4(std::clamp(c.x * f, 0.0F, 1.0F), std::clamp(c.y * f, 0.0F, 1.0F),
-                  std::clamp(c.z * f, 0.0F, 1.0F), c.w);
+    return ImVec4(std::clamp(c.x * f, 0.0F, 1.0F), std::clamp(c.y * f, 0.0F, 1.0F), std::clamp(c.z * f, 0.0F, 1.0F),
+                  c.w);
 }
 
 }  // namespace
 
-const Palette& palette() { return gPalette; }
+const Palette& palette() {
+    return gPalette;
+}
 
 void applyTheme(bool dark, int accentIndex, float totalScale) {
     // Accent choices follow the in-game cap colours (plus the star yellow default).
     static const ImVec4 accentsDark[4] = {rgba(247, 195, 37), rgba(232, 74, 74), rgba(70, 185, 110),
                                           rgba(80, 140, 235)};
-    static const ImVec4 accentsLight[4] = {rgba(176, 124, 0), rgba(190, 40, 40), rgba(30, 130, 70),
-                                           rgba(30, 90, 190)};
+    static const ImVec4 accentsLight[4] = {rgba(176, 124, 0), rgba(190, 40, 40), rgba(30, 130, 70), rgba(30, 90, 190)};
     const int idx = std::clamp(accentIndex, 0, 3);
 
     Palette p{};
@@ -64,7 +65,10 @@ void applyTheme(bool dark, int accentIndex, float totalScale) {
     ImGuiStyle fresh;  // default sizes, so ScaleAllSizes never compounds
     ImGuiStyle& style = ImGui::GetStyle();
     style = fresh;
-    if (dark) ImGui::StyleColorsDark(&style); else ImGui::StyleColorsLight(&style);
+    if (dark)
+        ImGui::StyleColorsDark(&style);
+    else
+        ImGui::StyleColorsLight(&style);
 
     style.WindowRounding = 6.0F;
     style.ChildRounding = 6.0F;
@@ -147,20 +151,28 @@ void configureFonts(float totalScale) {
 
 ImVec4 statusColor(Status status) {
     switch (status) {
-        case Status::Good: return gPalette.good;
-        case Status::Warning: return gPalette.warning;
-        case Status::Bad: return gPalette.bad;
-        case Status::Info: return gPalette.info;
+        case Status::Good:
+            return gPalette.good;
+        case Status::Warning:
+            return gPalette.warning;
+        case Status::Bad:
+            return gPalette.bad;
+        case Status::Info:
+            return gPalette.info;
     }
     return gPalette.info;
 }
 
 const char* statusWord(Status status) {
     switch (status) {
-        case Status::Good: return "OK";
-        case Status::Warning: return "Warning";
-        case Status::Bad: return "Problem";
-        case Status::Info: return "Info";
+        case Status::Good:
+            return "OK";
+        case Status::Warning:
+            return "Warning";
+        case Status::Bad:
+            return "Problem";
+        case Status::Info:
+            return "Info";
     }
     return "";
 }
@@ -217,8 +229,8 @@ void drawStar(ImDrawList* list, ImVec2 center, float radius, ImU32 color) {
     list->AddConvexPolyFilled(pts, 10, color);
 }
 
-void drawRing(ImDrawList* list, ImVec2 center, float radius, float thickness, float fraction,
-              ImU32 trackColor, ImU32 fillColor) {
+void drawRing(ImDrawList* list, ImVec2 center, float radius, float thickness, float fraction, ImU32 trackColor,
+              ImU32 fillColor) {
     constexpr float kPi = 3.14159265358979F;
     list->AddCircle(center, radius, trackColor, 48, thickness);
     const float f = std::clamp(fraction, 0.0F, 1.0F);

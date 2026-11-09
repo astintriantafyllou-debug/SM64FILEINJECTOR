@@ -36,7 +36,9 @@ inline float textTableHeight(int rows) {
     return row * static_cast<float>(rows + 1) + style.ScrollbarSize + 4.0F;
 }
 
-inline float em() { return ImGui::GetFontSize(); }
+inline float em() {
+    return ImGui::GetFontSize();
+}
 
 inline const char* slotName(int slot) {
     static const char* names[] = {"Slot A", "Slot B", "Slot C", "Slot D"};
@@ -51,8 +53,8 @@ inline std::string lower(std::string text) {
 
 inline sm64::SlotImage slotOf(const sm64::EepromBytes& bytes, int slot) {
     sm64::SlotImage image{};
-    std::copy_n(bytes.begin() + static_cast<std::ptrdiff_t>(sm64::P[static_cast<std::size_t>(slot)]),
-                sm64::Block, image.begin());
+    std::copy_n(bytes.begin() + static_cast<std::ptrdiff_t>(sm64::P[static_cast<std::size_t>(slot)]), sm64::Block,
+                image.begin());
     return image;
 }
 
@@ -105,22 +107,30 @@ inline void labelValue(const char* label, const std::string& value) {
 
 inline Status pairStatus(sm64::PairStatus status) {
     switch (status) {
-        case sm64::PairStatus::BothValidIdentical: return Status::Good;
+        case sm64::PairStatus::BothValidIdentical:
+            return Status::Good;
         case sm64::PairStatus::OnlyPrimaryValid:
         case sm64::PairStatus::OnlyBackupValid:
-        case sm64::PairStatus::BothValidDifferent: return Status::Warning;
-        case sm64::PairStatus::BothInvalid: return Status::Bad;
+        case sm64::PairStatus::BothValidDifferent:
+            return Status::Warning;
+        case sm64::PairStatus::BothInvalid:
+            return Status::Bad;
     }
     return Status::Info;
 }
 
 inline const char* pairStatusText(sm64::PairStatus status) {
     switch (status) {
-        case sm64::PairStatus::BothValidIdentical: return "Healthy";
-        case sm64::PairStatus::OnlyPrimaryValid: return "Backup copy invalid (recoverable)";
-        case sm64::PairStatus::OnlyBackupValid: return "Primary copy invalid (recoverable)";
-        case sm64::PairStatus::BothValidDifferent: return "Copies differ (your choice needed)";
-        case sm64::PairStatus::BothInvalid: return "Both copies invalid";
+        case sm64::PairStatus::BothValidIdentical:
+            return "Healthy";
+        case sm64::PairStatus::OnlyPrimaryValid:
+            return "Backup copy invalid (recoverable)";
+        case sm64::PairStatus::OnlyBackupValid:
+            return "Primary copy invalid (recoverable)";
+        case sm64::PairStatus::BothValidDifferent:
+            return "Copies differ (your choice needed)";
+        case sm64::PairStatus::BothInvalid:
+            return "Both copies invalid";
     }
     return "";
 }
@@ -140,6 +150,5 @@ inline std::string hex(unsigned value, int width) {
     std::snprintf(text, sizeof(text), "%0*X", width, value);
     return text;
 }
-
 
 }  // namespace sm64ui::detail

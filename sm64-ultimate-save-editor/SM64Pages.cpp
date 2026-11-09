@@ -41,8 +41,8 @@ void App::shortcutButtons() {
 }
 
 void App::writeReport(const std::string& defaultName, const std::string& extension, const std::string& text) {
-    std::filesystem::path suggested = path_.empty() ? std::filesystem::path(defaultName)
-                                                    : path_.parent_path() / defaultName;
+    std::filesystem::path suggested =
+        path_.empty() ? std::filesystem::path(defaultName) : path_.parent_path() / defaultName;
     const auto chosen = platform_.saveFileDialog("Save report", suggested, {extension});
     if (!chosen) return;
     std::filesystem::path target = *chosen;
@@ -94,12 +94,13 @@ void App::slotCard(int slot, float width) {
         const ImVec2 c(ringTop.x + ringR + 3.0F, ringTop.y + ringR + 3.0F);
         const float shown = shownStars_[static_cast<std::size_t>(slot)];
         const ImVec4 track = ImGui::GetStyleColorVec4(ImGuiCol_Border);
-        drawRing(dl, c, ringR, em() * 0.45F, shown / static_cast<float>(sm64::kMaxStars),
-                 ImGui::GetColorU32(track), ImGui::GetColorU32(pal.star));
+        drawRing(dl, c, ringR, em() * 0.45F, shown / static_cast<float>(sm64::kMaxStars), ImGui::GetColorU32(track),
+                 ImGui::GetColorU32(pal.star));
         char number[16]{};
         std::snprintf(number, sizeof(number), "%d", static_cast<int>(std::lround(shown)));
         const ImVec2 ts = ImGui::CalcTextSize(number);
-        dl->AddText(ImVec2(c.x - ts.x * 0.5F, c.y - ts.y * 0.5F - em() * 0.45F), ImGui::GetColorU32(ImGuiCol_Text), number);
+        dl->AddText(ImVec2(c.x - ts.x * 0.5F, c.y - ts.y * 0.5F - em() * 0.45F), ImGui::GetColorU32(ImGuiCol_Text),
+                    number);
         const char* of = "of 120";
         const ImVec2 os = ImGui::CalcTextSize(of);
         dl->AddText(ImVec2(c.x - os.x * 0.5F, c.y + em() * 0.1F), ImGui::GetColorU32(ImGuiCol_TextDisabled), of);
@@ -113,7 +114,11 @@ void App::slotCard(int slot, float width) {
     if (stars.exceedsRetail()) statusLabel(Status::Warning, "More than 120, or unmapped star bits are set");
 
     // Cap switches and keys, always with text.
-    struct Cap { std::uint32_t mask; const char* name; ImVec4 color; };
+    struct Cap {
+        std::uint32_t mask;
+        const char* name;
+        ImVec4 color;
+    };
     const Cap caps[3] = {{sm64::save_flag::HaveWingCap, "Wing", pal.wing},
                          {sm64::save_flag::HaveMetalCap, "Metal", pal.metal},
                          {sm64::save_flag::HaveVanishCap, "Vanish", pal.vanish}};
@@ -127,8 +132,10 @@ void App::slotCard(int slot, float width) {
         const ImU32 col = ImGui::GetColorU32(caps[i].color);
         if (on) {
             dl->AddRectFilled(p, ImVec2(p.x + s, p.y + s), col, 3.0F);
-            dl->AddLine(ImVec2(p.x + s * 0.22F, p.y + s * 0.52F), ImVec2(p.x + s * 0.42F, p.y + s * 0.74F), IM_COL32_WHITE, 2.0F);
-            dl->AddLine(ImVec2(p.x + s * 0.42F, p.y + s * 0.74F), ImVec2(p.x + s * 0.80F, p.y + s * 0.28F), IM_COL32_WHITE, 2.0F);
+            dl->AddLine(ImVec2(p.x + s * 0.22F, p.y + s * 0.52F), ImVec2(p.x + s * 0.42F, p.y + s * 0.74F),
+                        IM_COL32_WHITE, 2.0F);
+            dl->AddLine(ImVec2(p.x + s * 0.42F, p.y + s * 0.74F), ImVec2(p.x + s * 0.80F, p.y + s * 0.28F),
+                        IM_COL32_WHITE, 2.0F);
         } else {
             dl->AddRect(p, ImVec2(p.x + s, p.y + s), col, 3.0F, 0, 1.5F);
         }
@@ -180,10 +187,11 @@ void App::unsavedChangesPanel() {
     if (ImGui::CollapsingHeader(title.c_str(), changes.empty() ? 0 : ImGuiTreeNodeFlags_DefaultOpen)) {
         if (changes.empty()) {
             mutedText("Nothing has changed since the file was opened or last saved.");
-        } else if (ImGui::BeginTable("##pending", 3,
-                                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp |
-                                         ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
-                                     ImVec2(0.0F, textTableHeight(static_cast<int>(std::min<std::size_t>(changes.size(), 12U)))))) {
+        } else if (ImGui::BeginTable(
+                       "##pending", 3,
+                       ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp |
+                           ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
+                       ImVec2(0.0F, textTableHeight(static_cast<int>(std::min<std::size_t>(changes.size(), 12U)))))) {
             ImGui::TableSetupColumn("Field", ImGuiTableColumnFlags_WidthStretch, 3.0F);
             ImGui::TableSetupColumn("Was", ImGuiTableColumnFlags_WidthStretch, 1.4F);
             ImGui::TableSetupColumn("Now", ImGuiTableColumnFlags_WidthStretch, 1.4F);
@@ -225,13 +233,16 @@ void App::pageDashboard() {
     const sm64::Report report = core_.validate();
     std::size_t healthyPairs = 0;
     std::size_t blocksValid = 0;
-    for (const sm64::PairReport& pair : report.pairs) healthyPairs += pair.status == sm64::PairStatus::BothValidIdentical ? 1U : 0U;
+    for (const sm64::PairReport& pair : report.pairs)
+        healthyPairs += pair.status == sm64::PairStatus::BothValidIdentical ? 1U : 0U;
     for (std::size_t id = 0; id < sm64::kBlockCount; ++id) blocksValid += report.block(id).valid() ? 1U : 0U;
 
     Status overall = Status::Good;
     for (const sm64::PairReport& pair : report.pairs) {
-        if (pair.status == sm64::PairStatus::BothInvalid) overall = Status::Bad;
-        else if (pair.status != sm64::PairStatus::BothValidIdentical && overall != Status::Bad) overall = Status::Warning;
+        if (pair.status == sm64::PairStatus::BothInvalid)
+            overall = Status::Bad;
+        else if (pair.status != sm64::PairStatus::BothValidIdentical && overall != Status::Bad)
+            overall = Status::Warning;
     }
 
     // File summary
@@ -250,9 +261,8 @@ void App::pageDashboard() {
         ImGui::TableNextColumn();
         mutedText("Validation");
         ImGui::TableNextColumn();
-        const std::string text = overall == Status::Good
-                                     ? "All 10 blocks valid"
-                                     : std::to_string(blocksValid) + " of 10 blocks valid";
+        const std::string text =
+            overall == Status::Good ? "All 10 blocks valid" : std::to_string(blocksValid) + " of 10 blocks valid";
         statusLabel(overall, text.c_str());
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
@@ -264,7 +274,8 @@ void App::pageDashboard() {
         ImGui::TableNextColumn();
         mutedText("Unsaved changes");
         ImGui::TableNextColumn();
-        statusLabel(dirtyForUser() ? Status::Warning : Status::Good, dirtyForUser() ? "Yes - not saved to disk" : "None");
+        statusLabel(dirtyForUser() ? Status::Warning : Status::Good,
+                    dirtyForUser() ? "Yes - not saved to disk" : "None");
         labelValue("Last action", core_.lastAction().empty() ? std::string("None yet") : core_.lastAction());
         ImGui::EndTable();
     }
@@ -291,7 +302,8 @@ void App::pageDashboard() {
     if (ImGui::CollapsingHeader("Notes for this save (stored in a separate file)###notes")) {
         mutedText("Notes never go into the EEPROM. They are saved as \"<save file>.sm64notes.txt\".");
         ImGui::BeginDisabled(path_.empty());
-        if (ImGui::InputTextMultiline("##notes", notes_.data(), notes_.size(), ImVec2(-1.0F, 5.0F * ImGui::GetTextLineHeightWithSpacing()))) {
+        if (ImGui::InputTextMultiline("##notes", notes_.data(), notes_.size(),
+                                      ImVec2(-1.0F, 5.0F * ImGui::GetTextLineHeightWithSpacing()))) {
             notesDirty_ = true;
         }
         ImGui::BeginDisabled(!notesDirty_);
@@ -323,8 +335,8 @@ void App::courseTable(int slot) {
     const ImGuiStyle& tableStyle = ImGui::GetStyle();
     const float rowHeight = ImGui::GetFrameHeight() + tableStyle.CellPadding.y * 2.0F;
     const float headerHeight = ImGui::GetTextLineHeight() + tableStyle.CellPadding.y * 2.0F;
-    const float tableHeight = headerHeight + rowHeight * static_cast<float>(std::max(visibleRows, 1)) +
-                              tableStyle.ScrollbarSize + 4.0F;
+    const float tableHeight =
+        headerHeight + rowHeight * static_cast<float>(std::max(visibleRows, 1)) + tableStyle.ScrollbarSize + 4.0F;
     if (ImGui::BeginTable("##courses", 12, flags, ImVec2(0.0F, tableHeight))) {
         ImGui::TableSetupColumn("Course", ImGuiTableColumnFlags_WidthFixed, 14.0F * em());
         ImGui::TableSetupColumn("Coins", ImGuiTableColumnFlags_WidthFixed, 5.2F * em());
@@ -405,7 +417,8 @@ void App::pageSlots() {
     const sm64::Report report = core_.validate();
     const sm64::PairReport& pair = report.pairs[static_cast<std::size_t>(slot_)];
 
-    ImGui::Text("%s: %d stars total (%d main course, %d secret)", slotName(slot_), stars.total, stars.mainStars, stars.secretStars);
+    ImGui::Text("%s: %d stars total (%d main course, %d secret)", slotName(slot_), stars.total, stars.mainStars,
+                stars.secretStars);
     if (pair.status != sm64::PairStatus::BothValidIdentical) {
         statusLabel(pairStatus(pair.status), pairStatusText(pair.status));
         ImGui::SameLine();
@@ -418,14 +431,17 @@ void App::pageSlots() {
     if (row.button("Presets...", editsAllowed())) ImGui::OpenPopup("##slotpresets");
     if (row.button("Unlock all caps", editsAllowed())) openPresetDialog(sm64::PresetId::UnlockAllCaps);
     if (row.button("Complete all courses", editsAllowed())) {
-        core_.editSlot(slot_, std::string(slotName(slot_)) + ": all main-course stars collected", [](sm64::SlotImage& img) {
-            for (std::size_t c = 0; c < sm64::kMainCourseCount; ++c) sm64::setCourseStarBits(img, c, sm64::kStarBitsMask);
-        });
+        core_.editSlot(slot_, std::string(slotName(slot_)) + ": all main-course stars collected",
+                       [](sm64::SlotImage& img) {
+                           for (std::size_t c = 0; c < sm64::kMainCourseCount; ++c)
+                               sm64::setCourseStarBits(img, c, sm64::kStarBitsMask);
+                       });
     }
     if (row.button("Clear all courses", editsAllowed())) {
-        core_.editSlot(slot_, std::string(slotName(slot_)) + ": all main-course stars cleared", [](sm64::SlotImage& img) {
-            for (std::size_t c = 0; c < sm64::kMainCourseCount; ++c) sm64::setCourseStarBits(img, c, 0);
-        });
+        core_.editSlot(slot_, std::string(slotName(slot_)) + ": all main-course stars cleared",
+                       [](sm64::SlotImage& img) {
+                           for (std::size_t c = 0; c < sm64::kMainCourseCount; ++c) sm64::setCourseStarBits(img, c, 0);
+                       });
     }
     if (ImGui::BeginPopup("##slotpresets")) {
         for (const sm64::PresetInfo& info : sm64::presetCatalog()) {
@@ -447,8 +463,9 @@ void App::pageSlots() {
 
     courseTable(slot_);
     ImGui::Spacing();
-    mutedText("Columns 1-7 are the course's seven stars (the 7th is the 100-coin star). Amber highlights "
-                        "values that differ from the saved file. The cannon-open flag shares these bytes and is never changed here.");
+    mutedText(
+        "Columns 1-7 are the course's seven stars (the 7th is the 100-coin star). Amber highlights "
+        "values that differ from the saved file. The cannon-open flag shares these bytes and is never changed here.");
 }
 
 // ---------------------------------------------------------------------------
@@ -468,10 +485,13 @@ void App::pageSecretStars() {
     ImGui::Text("Overall: %d / %d (a normal completed retail save has exactly 120)", stars.total, sm64::kMaxStars);
     char overlay[32]{};
     std::snprintf(overlay, sizeof(overlay), "%d / 120", stars.total);
-    ImGui::ProgressBar(static_cast<float>(stars.total) / static_cast<float>(sm64::kMaxStars), ImVec2(-FLT_MIN, 0.0F), overlay);
+    ImGui::ProgressBar(static_cast<float>(stars.total) / static_cast<float>(sm64::kMaxStars), ImVec2(-FLT_MIN, 0.0F),
+                       overlay);
     if (stars.exceedsRetail()) {
-        statusLabel(Status::Warning, (std::to_string(stars.unmappedExtra) +
-                                      " extra star bit(s) are set that no retail star uses. The game still counts them.").c_str());
+        statusLabel(Status::Warning,
+                    (std::to_string(stars.unmappedExtra) +
+                     " extra star bit(s) are set that no retail star uses. The game still counts them.")
+                        .c_str());
     }
     ImGui::EndChild();
     ImGui::Spacing();
@@ -560,8 +580,9 @@ void App::pageCastle() {
     flagBox(sm64::save_flag::FileExists, nullptr);
 
     ImGui::SeparatorText("Cap switches");
-    ImGui::TextWrapped("A cap switch only unlocks the matching coloured cap blocks in the game. It does not make Mario wear a "
-                       "cap permanently. For the Wing Cap, flying still needs a triple jump or a cannon launch.");
+    ImGui::TextWrapped(
+        "A cap switch only unlocks the matching coloured cap blocks in the game. It does not make Mario wear a "
+        "cap permanently. For the Wing Cap, flying still needs a triple jump or a cannon launch.");
     flagBox(sm64::save_flag::HaveWingCap, &pal.wing);
     flagBox(sm64::save_flag::HaveMetalCap, &pal.metal);
     flagBox(sm64::save_flag::HaveVanishCap, &pal.vanish);
@@ -573,7 +594,9 @@ void App::pageCastle() {
     flagBox(sm64::save_flag::UnlockedUpstairsDoor, nullptr);
     if (((flags & sm64::save_flag::HaveKey1) != 0U && (flags & sm64::save_flag::UnlockedBasementDoor) != 0U) ||
         ((flags & sm64::save_flag::HaveKey2) != 0U && (flags & sm64::save_flag::UnlockedUpstairsDoor) != 0U)) {
-        statusLabel(Status::Info, "A key is marked as held and its door as unlocked. The game clears the key when it opens the door.");
+        statusLabel(
+            Status::Info,
+            "A key is marked as held and its door as unlocked. The game clears the key when it opens the door.");
     }
 
     ImGui::SeparatorText("Castle events");
@@ -596,7 +619,7 @@ void App::pageCastle() {
     }
     if (settings_.expert) {
         mutedText("Lost-cap level byte: 0x%02X, area byte: 0x%02X (not editable here)",
-                            image[sm64::slot_field::CapLevel], image[sm64::slot_field::CapArea]);
+                  image[sm64::slot_field::CapLevel], image[sm64::slot_field::CapArea]);
     }
 
     ImGui::Spacing();

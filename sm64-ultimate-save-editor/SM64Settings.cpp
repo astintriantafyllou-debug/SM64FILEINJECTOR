@@ -13,8 +13,14 @@ namespace sm64 {
 namespace {
 
 bool parseBool(const std::string& v, bool& out) {
-    if (v == "1" || v == "true") { out = true; return true; }
-    if (v == "0" || v == "false") { out = false; return true; }
+    if (v == "1" || v == "true") {
+        out = true;
+        return true;
+    }
+    if (v == "0" || v == "false") {
+        out = false;
+        return true;
+    }
     return false;
 }
 
@@ -42,22 +48,32 @@ Settings parseSettings(const std::string& text) {
         const std::string value = line.substr(eq + 1);
         bool b = false;
         long long n = 0;
-        if (key == "dark" && parseBool(value, b)) s.darkTheme = b;
-        else if (key == "accent" && parseInt(value, 10, n) && n >= 0 && n <= 3) s.accent = static_cast<int>(n);
+        if (key == "dark" && parseBool(value, b))
+            s.darkTheme = b;
+        else if (key == "accent" && parseInt(value, 10, n) && n >= 0 && n <= 3)
+            s.accent = static_cast<int>(n);
         else if (key == "scale") {
             char* end = nullptr;
             const float f = std::strtof(value.c_str(), &end);
             if (end != value.c_str() && *end == '\0') s.userScale = std::clamp(f, kMinUserScale, kMaxUserScale);
-        }
-        else if (key == "expert" && parseBool(value, b)) s.expert = b;
-        else if (key == "autorepair" && parseBool(value, b)) s.autoRepairOnLoad = b;
-        else if (key == "backup" && parseBool(value, b)) s.backupOnSave = b;
-        else if (key == "tutorial" && parseBool(value, b)) s.tutorialSeen = b;
-        else if (key == "forensic" && parseBool(value, b)) s.forensic = b;
-        else if (key == "gs_base" && parseInt(value, 16, n) && n >= 0 && n <= 0xFFFFFFFFLL) s.gsBase = static_cast<std::uint32_t>(n);
-        else if (key == "gs_16bit" && parseBool(value, b)) s.gsUse16 = b;
-        else if (key == "gs_all" && parseBool(value, b)) s.gsIncludeAll = b;
-        else if (key == "gs_comments" && parseBool(value, b)) s.gsComments = b;
+        } else if (key == "expert" && parseBool(value, b))
+            s.expert = b;
+        else if (key == "autorepair" && parseBool(value, b))
+            s.autoRepairOnLoad = b;
+        else if (key == "backup" && parseBool(value, b))
+            s.backupOnSave = b;
+        else if (key == "tutorial" && parseBool(value, b))
+            s.tutorialSeen = b;
+        else if (key == "forensic" && parseBool(value, b))
+            s.forensic = b;
+        else if (key == "gs_base" && parseInt(value, 16, n) && n >= 0 && n <= 0xFFFFFFFFLL)
+            s.gsBase = static_cast<std::uint32_t>(n);
+        else if (key == "gs_16bit" && parseBool(value, b))
+            s.gsUse16 = b;
+        else if (key == "gs_all" && parseBool(value, b))
+            s.gsIncludeAll = b;
+        else if (key == "gs_comments" && parseBool(value, b))
+            s.gsComments = b;
         else if (key == "recent" && !value.empty()) {
             (void)firstRecent;
             if (s.recent.size() < kMaxRecentFiles) s.recent.push_back(value);
@@ -102,13 +118,12 @@ bool saveSettings(const std::filesystem::path& path, const Settings& settings, s
     AtomicWriteOptions options;
     options.makeBackup = false;
     return atomicWriteFile(
-        path, std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(text.data()), text.size()),
-        options, error);
+        path, std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(text.data()), text.size()), options,
+        error);
 }
 
 void addRecentFile(Settings& settings, const std::string& path) {
-    settings.recent.erase(std::remove(settings.recent.begin(), settings.recent.end(), path),
-                          settings.recent.end());
+    settings.recent.erase(std::remove(settings.recent.begin(), settings.recent.end(), path), settings.recent.end());
     settings.recent.insert(settings.recent.begin(), path);
     if (settings.recent.size() > kMaxRecentFiles) settings.recent.resize(kMaxRecentFiles);
 }

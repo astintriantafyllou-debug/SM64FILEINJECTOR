@@ -16,7 +16,7 @@ struct Settings {
     bool autoRepairOnLoad{true};
     bool backupOnSave{true};
     bool tutorialSeen{false};
-    bool forensic{false};   // read-only mode: no edits, no saving over the source
+    bool forensic{false};  // read-only mode: no edits, no saving over the source
     std::uint32_t gsBase{0x80207700U};
     bool gsUse16{true};
     bool gsIncludeAll{false};
@@ -32,8 +32,7 @@ inline constexpr float kMaxUserScale = 2.0F;
 [[nodiscard]] Settings parseSettings(const std::string& text);
 [[nodiscard]] std::string serializeSettings(const Settings& settings);
 [[nodiscard]] bool loadSettings(const std::filesystem::path& path, Settings& out);
-[[nodiscard]] bool saveSettings(const std::filesystem::path& path, const Settings& settings,
-                                std::string& error);
+[[nodiscard]] bool saveSettings(const std::filesystem::path& path, const Settings& settings, std::string& error);
 void addRecentFile(Settings& settings, const std::string& path);
 
 }  // namespace sm64

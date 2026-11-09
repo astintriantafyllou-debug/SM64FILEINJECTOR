@@ -22,8 +22,8 @@ namespace sm64 {
 // --------------------------------------------------------------------------
 // File layout
 // --------------------------------------------------------------------------
-inline constexpr std::size_t Size = 512;   // whole EEPROM (4 Kbit)
-inline constexpr std::size_t Block = 56;   // one save-slot copy (struct SaveFile)
+inline constexpr std::size_t Size = 512;  // whole EEPROM (4 Kbit)
+inline constexpr std::size_t Block = 56;  // one save-slot copy (struct SaveFile)
 inline constexpr std::size_t kSlotCount = 4;
 inline constexpr std::size_t kMenuBlockSize = 32;  // struct MainMenuSaveData
 inline constexpr std::size_t MenuPrimaryOffset = 0x1C0;
@@ -48,7 +48,7 @@ struct BlockInfo {
     std::size_t size;
     std::uint16_t magic;
     bool isMenu;
-    int slot;      // 0-3, or -1 for the menu block
+    int slot;  // 0-3, or -1 for the menu block
     bool isBackup;
 };
 
@@ -56,22 +56,20 @@ struct BlockInfo {
     if (id < 8U) {
         const std::size_t slot = id / 2U;
         const bool backup = (id % 2U) != 0U;
-        return BlockInfo{backup ? B[slot] : P[slot], Block, kSlotMagic, false,
-                         static_cast<int>(slot), backup};
+        return BlockInfo{backup ? B[slot] : P[slot], Block, kSlotMagic, false, static_cast<int>(slot), backup};
     }
     const bool backup = id == 9U;
-    return BlockInfo{backup ? MenuBackupOffset : MenuPrimaryOffset, kMenuBlockSize, kMenuMagic,
-                     true, -1, backup};
+    return BlockInfo{backup ? MenuBackupOffset : MenuPrimaryOffset, kMenuBlockSize, kMenuMagic, true, -1, backup};
 }
 
 // --------------------------------------------------------------------------
 // Offsets inside one 56-byte save slot (struct SaveFile)
 // --------------------------------------------------------------------------
 namespace slot_field {
-inline constexpr std::size_t CapLevel = 0;    // u8
-inline constexpr std::size_t CapArea = 1;     // u8
-inline constexpr std::size_t CapPos = 2;      // Vec3s, 3 x s16 big-endian
-inline constexpr std::size_t Flags = 8;       // u32 big-endian
+inline constexpr std::size_t CapLevel = 0;      // u8
+inline constexpr std::size_t CapArea = 1;       // u8
+inline constexpr std::size_t CapPos = 2;        // Vec3s, 3 x s16 big-endian
+inline constexpr std::size_t Flags = 8;         // u32 big-endian
 inline constexpr std::size_t CourseStars = 12;  // u8[25]
 inline constexpr std::size_t CourseStarCount = 25;
 inline constexpr std::size_t CoinScores = 37;  // u8[15]
@@ -100,10 +98,10 @@ inline constexpr std::uint32_t UnlockedBasementDoor = 1U << 6;
 inline constexpr std::uint32_t UnlockedUpstairsDoor = 1U << 7;
 inline constexpr std::uint32_t DddMovedBack = 1U << 8;
 inline constexpr std::uint32_t MoatDrained = 1U << 9;
-inline constexpr std::uint32_t UnlockedPssDoor = 1U << 10;   // 1-star door (upper)
-inline constexpr std::uint32_t UnlockedWfDoor = 1U << 11;    // 1-star door
-inline constexpr std::uint32_t UnlockedCcmDoor = 1U << 12;   // 3-star door
-inline constexpr std::uint32_t UnlockedJrbDoor = 1U << 13;   // 3-star door
+inline constexpr std::uint32_t UnlockedPssDoor = 1U << 10;    // 1-star door (PSS)
+inline constexpr std::uint32_t UnlockedWfDoor = 1U << 11;     // 1-star door (WF)
+inline constexpr std::uint32_t UnlockedCcmDoor = 1U << 12;    // 3-star door
+inline constexpr std::uint32_t UnlockedJrbDoor = 1U << 13;    // 3-star door
 inline constexpr std::uint32_t UnlockedBitdwDoor = 1U << 14;  // 8-star door
 inline constexpr std::uint32_t UnlockedBitfsDoor = 1U << 15;  // 30-star door
 inline constexpr std::uint32_t CapOnGround = 1U << 16;
@@ -136,36 +134,28 @@ inline constexpr std::array<FlagInfo, 21> kFlagTable{{
      "Mario is carrying the basement key. The game clears this when the door is unlocked."},
     {save_flag::HaveKey2, "Upstairs key (held)",
      "Mario is carrying the upstairs key. The game clears this when the door is unlocked."},
-    {save_flag::UnlockedBasementDoor, "Basement door unlocked",
-     "The basement door has been opened with the key."},
-    {save_flag::UnlockedUpstairsDoor, "Upstairs door unlocked",
-     "The upstairs door has been opened with the key."},
+    {save_flag::UnlockedBasementDoor, "Basement door unlocked", "The basement door has been opened with the key."},
+    {save_flag::UnlockedUpstairsDoor, "Upstairs door unlocked", "The upstairs door has been opened with the key."},
     {save_flag::DddMovedBack, "Dire, Dire Docks moved",
-     "The Dire, Dire Docks painting has moved back, revealing the Bowser in the Fire Sea area."},
-    {save_flag::MoatDrained, "Castle moat drained",
-     "The moat water has been drained after the Water Pillar event."},
+     "The Dire, Dire Docks painting has been moved back (SAVE_FLAG_DDD_MOVED_BACK)."},
+    {save_flag::MoatDrained, "Castle moat drained", "The castle moat has been drained (SAVE_FLAG_MOAT_DRAINED)."},
     {save_flag::UnlockedPssDoor, "Slide door unlocked (1-star)",
-     "Star-door flag for the upper 1-star door."},
+     "Star-door flag: the 1-star door the game identifies as the Princess's Secret Slide door."},
     {save_flag::UnlockedWfDoor, "Whomp's door unlocked (1-star)",
-     "Star-door flag for the 1-star door in the lobby."},
+     "Star-door flag: the other 1-star door (the one the game identifies as the Whomp's Fortress door)."},
     {save_flag::UnlockedCcmDoor, "Cool, Cool door unlocked (3-star)",
-     "Star-door flag for the 3-star door by Cool, Cool Mountain."},
+     "Star-door flag: the 3-star door the game identifies as the Cool, Cool Mountain door."},
     {save_flag::UnlockedJrbDoor, "Jolly Roger door unlocked (3-star)",
-     "Star-door flag for the 3-star door by Jolly Roger Bay."},
+     "Star-door flag: the other 3-star door (the one the game identifies as the Jolly Roger Bay door)."},
     {save_flag::UnlockedBitdwDoor, "Dark World door unlocked (8-star)",
-     "Star-door flag for the 8-star door."},
+     "Star-door flag: the 8-star door (Bowser in the Dark World door)."},
     {save_flag::UnlockedBitfsDoor, "Fire Sea door unlocked (30-star)",
-     "Star-door flag for the 30-star door."},
-    {save_flag::Unlocked50StarDoor, "50-star door unlocked",
-     "Star-door flag for the 50-star door to the third floor."},
-    {save_flag::CapOnGround, "Lost cap: on the ground",
-     "Mario's cap was lost in a stage and is lying on the ground."},
-    {save_flag::CapOnKlepto, "Lost cap: Klepto has it",
-     "Klepto the condor is carrying Mario's cap."},
-    {save_flag::CapOnUkiki, "Lost cap: Ukiki has it",
-     "Ukiki the monkey has Mario's cap."},
-    {save_flag::CapOnMrBlizzard, "Lost cap: Mr. Blizzard has it",
-     "Mr. Blizzard the snowman has Mario's cap."},
+     "Star-door flag: the 30-star door (Bowser in the Fire Sea door)."},
+    {save_flag::Unlocked50StarDoor, "50-star door unlocked", "Star-door flag: the 50-star door."},
+    {save_flag::CapOnGround, "Lost cap: on the ground", "Mario's cap was lost in a stage and is lying on the ground."},
+    {save_flag::CapOnKlepto, "Lost cap: Klepto has it", "Klepto the condor is carrying Mario's cap."},
+    {save_flag::CapOnUkiki, "Lost cap: Ukiki has it", "Ukiki the monkey has Mario's cap."},
+    {save_flag::CapOnMrBlizzard, "Lost cap: Mr. Blizzard has it", "Mr. Blizzard the snowman has Mario's cap."},
 }};
 
 // --------------------------------------------------------------------------
@@ -175,11 +165,9 @@ inline constexpr std::size_t kMainCourseCount = 15;
 // courseStars[0..14] = the 15 main courses (COURSE_BOB .. COURSE_RR).
 // courseStars[15..23] = the 9 bonus stages; [24] = cake end (unused).
 inline constexpr std::array<const char*, 15> Courses{
-    "Bob-omb Battlefield", "Whomp's Fortress",  "Jolly Roger Bay",
-    "Cool, Cool Mountain", "Big Boo's Haunt",   "Hazy Maze Cave",
-    "Lethal Lava Land",    "Shifting Sand Land", "Dire, Dire Docks",
-    "Snowman's Land",      "Wet-Dry World",     "Tall, Tall Mountain",
-    "Tiny-Huge Island",    "Tick Tock Clock",   "Rainbow Ride"};
+    "Bob-omb Battlefield", "Whomp's Fortress",    "Jolly Roger Bay",    "Cool, Cool Mountain", "Big Boo's Haunt",
+    "Hazy Maze Cave",      "Lethal Lava Land",    "Shifting Sand Land", "Dire, Dire Docks",    "Snowman's Land",
+    "Wet-Dry World",       "Tall, Tall Mountain", "Tiny-Huge Island",   "Tick Tock Clock",     "Rainbow Ride"};
 
 // Bit 7 of a course byte is the cannon-open flag. The game indexes it with the
 // 1-based course number, so the cannon flag for course N lives in the star byte
@@ -219,8 +207,7 @@ inline constexpr std::array<SecretStar, kSecretStarCount> kSecretStars{{
 }};
 
 inline constexpr int kMaxStars = 120;
-static_assert(static_cast<int>(kMainCourseCount) * kStarsPerMainCourse +
-                      static_cast<int>(kSecretStarCount) ==
+static_assert(static_cast<int>(kMainCourseCount) * kStarsPerMainCourse + static_cast<int>(kSecretStarCount) ==
                   kMaxStars,
               "105 main-course stars + 15 secret stars must equal 120");
 

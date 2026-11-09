@@ -11,8 +11,7 @@ constexpr std::array<PresetInfo, kPresetCount> kCatalog{{
      "default menu block.",
      PresetScope::WholeFile, true},
     {PresetId::NewOccupiedSlotA, "New occupied Slot A",
-     "A blank file whose Slot A is marked as an existing save (no stars, no switches).",
-     PresetScope::WholeFile, true},
+     "A blank file whose Slot A is marked as an existing save (no stars, no switches).", PresetScope::WholeFile, true},
     {PresetId::UnlockAllCaps, "Unlock all cap switches",
      "Presses the red, green and blue switches. This only makes the Wing, Metal and Vanish Cap blocks "
      "appear; Mario does not wear a cap permanently.",
@@ -30,43 +29,42 @@ constexpr std::array<PresetInfo, kPresetCount> kCatalog{{
      "scores raised to at least 100.",
      PresetScope::Slot, true},
     {PresetId::ClearSlot, "Clear selected slot",
-     "Erases the slot the same way the game's Erase option does (both copies zeroed and re-signed).",
-     PresetScope::Slot, true},
+     "Erases the slot the same way the game's Erase option does (both copies zeroed and re-signed).", PresetScope::Slot,
+     true},
     {PresetId::CopySlot, "Copy slot to another slot",
-     "Copies every byte of the selected slot into both copies of the destination slot.",
-     PresetScope::SlotPair, true},
+     "Copies every byte of the selected slot into both copies of the destination slot.", PresetScope::SlotPair, true},
     {PresetId::SyncPrimaryToBackup, "Synchronize backup from primary",
-     "Overwrites the backup copy with the primary copy. Requires a valid primary copy.",
-     PresetScope::Slot, false},
+     "Overwrites the backup copy with the primary copy. Requires a valid primary copy.", PresetScope::Slot, false},
     {PresetId::RestoreFromBackup, "Restore slot from backup",
-     "Overwrites the primary copy with the backup copy. Requires a valid backup copy.",
-     PresetScope::Slot, true},
+     "Overwrites the primary copy with the backup copy. Requires a valid backup copy.", PresetScope::Slot, true},
     {PresetId::RepairAllRecoverable, "Repair all recoverable blocks",
      "Restores any block that has exactly one valid copy. Pairs where both copies are invalid, or both "
      "valid but different, are left alone.",
      PresetScope::WholeFile, false},
     {PresetId::NoveltyAllCapsNoStars, "Novelty: all caps, zero stars",
-     "Presses every cap switch but removes every star and coin score. A fun challenge start.",
-     PresetScope::Slot, true},
+     "Presses every cap switch but removes every star and coin score. A fun challenge start.", PresetScope::Slot, true},
     {PresetId::RandomChallenge, "Random challenge save",
-     "A reproducible random mix of stars from a seed. The same seed always gives the same save.",
-     PresetScope::Slot, true},
+     "A reproducible random mix of stars from a seed. The same seed always gives the same save.", PresetScope::Slot,
+     true},
 }};
 
-constexpr std::uint32_t kCaps = save_flag::HaveWingCap | save_flag::HaveMetalCap |
-                                save_flag::HaveVanishCap;
+constexpr std::uint32_t kCaps = save_flag::HaveWingCap | save_flag::HaveMetalCap | save_flag::HaveVanishCap;
 constexpr std::uint32_t kKeys = save_flag::HaveKey1 | save_flag::HaveKey2;
-constexpr std::uint32_t kCastle =
-    save_flag::UnlockedBasementDoor | save_flag::UnlockedUpstairsDoor | save_flag::DddMovedBack |
-    save_flag::MoatDrained | save_flag::UnlockedPssDoor | save_flag::UnlockedWfDoor |
-    save_flag::UnlockedCcmDoor | save_flag::UnlockedJrbDoor | save_flag::UnlockedBitdwDoor |
-    save_flag::UnlockedBitfsDoor | save_flag::Unlocked50StarDoor;
-constexpr std::uint32_t kLostCap = save_flag::CapOnGround | save_flag::CapOnKlepto |
-                                   save_flag::CapOnUkiki | save_flag::CapOnMrBlizzard;
+constexpr std::uint32_t kCastle = save_flag::UnlockedBasementDoor | save_flag::UnlockedUpstairsDoor |
+                                  save_flag::DddMovedBack | save_flag::MoatDrained | save_flag::UnlockedPssDoor |
+                                  save_flag::UnlockedWfDoor | save_flag::UnlockedCcmDoor | save_flag::UnlockedJrbDoor |
+                                  save_flag::UnlockedBitdwDoor | save_flag::UnlockedBitfsDoor |
+                                  save_flag::Unlocked50StarDoor;
+constexpr std::uint32_t kLostCap =
+    save_flag::CapOnGround | save_flag::CapOnKlepto | save_flag::CapOnUkiki | save_flag::CapOnMrBlizzard;
 
-std::string letter(int slot) { return std::string(1U, static_cast<char>('A' + slot)); }
+std::string letter(int slot) {
+    return std::string(1U, static_cast<char>('A' + slot));
+}
 
-bool slotOk(int slot) { return slot >= 0 && slot < static_cast<int>(kSlotCount); }
+bool slotOk(int slot) {
+    return slot >= 0 && slot < static_cast<int>(kSlotCount);
+}
 
 void writeSlot(EepromBytes& bytes, int slot, const SlotImage& image) {
     const auto s = static_cast<std::size_t>(slot);
@@ -78,8 +76,7 @@ void writeSlot(EepromBytes& bytes, int slot, const SlotImage& image) {
 
 SlotImage readSlot(const EepromBytes& bytes, int slot) {
     SlotImage image{};
-    std::copy_n(bytes.begin() + static_cast<std::ptrdiff_t>(P[static_cast<std::size_t>(slot)]), Block,
-                image.begin());
+    std::copy_n(bytes.begin() + static_cast<std::ptrdiff_t>(P[static_cast<std::size_t>(slot)]), Block, image.begin());
     return image;
 }
 
@@ -99,7 +96,9 @@ std::uint32_t nextRandom(std::uint32_t& state) {
 
 }  // namespace
 
-const std::array<PresetInfo, kPresetCount>& presetCatalog() noexcept { return kCatalog; }
+const std::array<PresetInfo, kPresetCount>& presetCatalog() noexcept {
+    return kCatalog;
+}
 
 const PresetInfo& presetInfo(PresetId id) noexcept {
     const auto index = static_cast<std::size_t>(id);
@@ -117,8 +116,7 @@ PresetPlan planPreset(const EepromBytes& current, const PresetRequest& request) 
         plan.error = "Choose a valid slot (A-D).";
         return plan;
     }
-    if (info.scope == PresetScope::SlotPair &&
-        (!slotOk(request.destSlot) || request.destSlot == request.slot)) {
+    if (info.scope == PresetScope::SlotPair && (!slotOk(request.destSlot) || request.destSlot == request.slot)) {
         plan.error = "Choose a destination slot that is different from the source slot.";
         return plan;
     }
@@ -178,8 +176,7 @@ PresetPlan planPreset(const EepromBytes& current, const PresetRequest& request) 
                     (std::max)(image[slot_field::CoinScores + course], std::uint8_t{100});
             }
             for (const SecretStar& star : kSecretStars) setSecretStar(image, star, true);
-            setSlotFlags(image,
-                         (slotFlags(image) | save_flag::FileExists | kCaps | kCastle) & ~(kKeys | kLostCap));
+            setSlotFlags(image, (slotFlags(image) | save_flag::FileExists | kCaps | kCastle) & ~(kKeys | kLostCap));
             writeSlot(plan.after, slot, image);
             plan.summary = "Slot " + letter(slot) + " now has exactly 120 stars.";
             break;
@@ -199,8 +196,8 @@ PresetPlan planPreset(const EepromBytes& current, const PresetRequest& request) 
 
         case PresetId::SyncPrimaryToBackup: {
             if (!report.block(static_cast<std::size_t>(slot) * 2U).valid()) {
-                plan.error = "The primary copy of Slot " + letter(slot) +
-                             " is not valid, so it cannot be used as the source.";
+                plan.error =
+                    "The primary copy of Slot " + letter(slot) + " is not valid, so it cannot be used as the source.";
                 return plan;
             }
             writeSlot(plan.after, slot, readSlot(current, slot));
@@ -211,8 +208,8 @@ PresetPlan planPreset(const EepromBytes& current, const PresetRequest& request) 
         case PresetId::RestoreFromBackup: {
             const auto s = static_cast<std::size_t>(slot);
             if (!report.block(s * 2U + 1U).valid()) {
-                plan.error = "The backup copy of Slot " + letter(slot) +
-                             " is not valid, so it cannot be used as the source.";
+                plan.error =
+                    "The backup copy of Slot " + letter(slot) + " is not valid, so it cannot be used as the source.";
                 return plan;
             }
             std::copy_n(current.begin() + static_cast<std::ptrdiff_t>(B[s]), Block,

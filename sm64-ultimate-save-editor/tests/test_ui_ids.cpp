@@ -38,7 +38,9 @@ void ImGuiTestEngineHook_ItemInfo(ImGuiContext*, ImGuiID id, const char* label, 
     if (gCollect && label != nullptr) gLabels.emplace(id, label);
 }
 void ImGuiTestEngineHook_Log(ImGuiContext*, const char*, ...) {}
-const char* ImGuiTestEngine_FindItemDebugLabel(ImGuiContext*, ImGuiID) { return nullptr; }
+const char* ImGuiTestEngine_FindItemDebugLabel(ImGuiContext*, ImGuiID) {
+    return nullptr;
+}
 
 namespace {
 
@@ -112,7 +114,8 @@ Audit auditFrame(const Harness& h, Fn&& body) {
         childIds.insert(window->ChildId);
         if (window->BeginCount > 1) {
             a.duplicates += static_cast<std::size_t>(window->BeginCount - 1);
-            if (a.firstDuplicate.empty()) a.firstDuplicate = std::string("child window '") + window->Name + "' opened twice";
+            if (a.firstDuplicate.empty())
+                a.firstDuplicate = std::string("child window '") + window->Name + "' opened twice";
         }
     }
 
@@ -140,9 +143,9 @@ sm64::Core makeBusyCore() {
     request.slot = 1;
     request.seed = 7;
     (void)sm64::applyPreset(core, request, error);
-    core.setMirrored(2, 5, 0xAB);                       // slot C: both copies invalid (raw edit)
-    core.set(sm64::B[3] + 20, 0x55);                    // slot D: backup invalid -> recoverable
-    core.set(sm64::MenuPrimaryOffset + 2, 0x11);        // menu primary invalid
+    core.setMirrored(2, 5, 0xAB);                 // slot C: both copies invalid (raw edit)
+    core.set(sm64::B[3] + 20, 0x55);              // slot D: backup invalid -> recoverable
+    core.set(sm64::MenuPrimaryOffset + 2, 0x11);  // menu primary invalid
     return core;
 }
 
@@ -259,7 +262,8 @@ TEST("ID audit does not flag InputTextMultiline's internal ID reuse") {
 // Real application
 // ===========================================================================
 TEST("no duplicate widget IDs on any page, in either mode, at several window sizes") {
-    const float sizes[][2] = {{800.0F, 600.0F}, {1024.0F, 768.0F}, {1280.0F, 720.0F}, {1920.0F, 1080.0F}, {2560.0F, 1440.0F}};
+    const float sizes[][2] = {
+        {800.0F, 600.0F}, {1024.0F, 768.0F}, {1280.0F, 720.0F}, {1920.0F, 1080.0F}, {2560.0F, 1440.0F}};
     for (const bool dark : {true, false}) {
         Harness h(dark);
         for (const bool expert : {false, true}) {
@@ -279,9 +283,11 @@ TEST("no duplicate widget IDs on any page, in either mode, at several window siz
                         h.frame(app, size[0], size[1]);  // warm-up so layout settles
                         const Audit a = auditFrame(h, [&](const Harness& hh) { hh.frame(app, size[0], size[1]); });
                         if (a.duplicates != 0U) {
-                            std::fprintf(stderr, "    duplicate IDs on page %zu (%s, %s, %.0fx%.0f, slot %d): %zu, e.g. '%s'\n", p,
-                                         expert ? "expert" : "beginner", dark ? "dark" : "light", static_cast<double>(size[0]),
-                                         static_cast<double>(size[1]), slot, a.duplicates, a.firstDuplicate.c_str());
+                            std::fprintf(stderr,
+                                         "    duplicate IDs on page %zu (%s, %s, %.0fx%.0f, slot %d): %zu, e.g. '%s'\n",
+                                         p, expert ? "expert" : "beginner", dark ? "dark" : "light",
+                                         static_cast<double>(size[0]), static_cast<double>(size[1]), slot, a.duplicates,
+                                         a.firstDuplicate.c_str());
                         }
                         CHECK_EQ(a.duplicates, std::size_t{0});
                     }
@@ -312,9 +318,9 @@ TEST("the audit is not vacuous: key pages really submit many widgets") {
 }
 
 TEST("no duplicate IDs inside any dialog") {
-    const Dialog dialogs[] = {Dialog::Unsaved, Dialog::NewSave, Dialog::Preset, Dialog::Overwrite, Dialog::Notice,
-                              Dialog::Welcome, Dialog::Shortcuts, Dialog::History, Dialog::Palette, Dialog::RepairPreview,
-                              Dialog::Confirm};
+    const Dialog dialogs[] = {Dialog::Unsaved, Dialog::NewSave,       Dialog::Preset,    Dialog::Overwrite,
+                              Dialog::Notice,  Dialog::Welcome,       Dialog::Shortcuts, Dialog::History,
+                              Dialog::Palette, Dialog::RepairPreview, Dialog::Confirm};
     for (const Dialog dialog : dialogs) {
         for (const auto& size : {std::pair<float, float>{800.0F, 600.0F}, std::pair<float, float>{1920.0F, 1080.0F}}) {
             Harness h;
@@ -332,8 +338,8 @@ TEST("no duplicate IDs inside any dialog") {
             for (int i = 0; i < 3; ++i) h.frame(app, size.first, size.second);
             const Audit a = auditFrame(h, [&](const Harness& hh) { hh.frame(app, size.first, size.second); });
             if (a.duplicates != 0U) {
-                std::fprintf(stderr, "    duplicate IDs in dialog %d: %zu, e.g. '%s'\n", static_cast<int>(dialog), a.duplicates,
-                             a.firstDuplicate.c_str());
+                std::fprintf(stderr, "    duplicate IDs in dialog %d: %zu, e.g. '%s'\n", static_cast<int>(dialog),
+                             a.duplicates, a.firstDuplicate.c_str());
             }
             CHECK_EQ(a.duplicates, std::size_t{0});
         }
@@ -341,7 +347,7 @@ TEST("no duplicate IDs inside any dialog") {
 }
 
 TEST("every dialog stays inside the usable display (no off-screen popups)") {
-    const Dialog dialogs[] = {Dialog::Unsaved, Dialog::NewSave, Dialog::Notice, Dialog::Welcome,
+    const Dialog dialogs[] = {Dialog::Unsaved,   Dialog::NewSave, Dialog::Notice,  Dialog::Welcome,
                               Dialog::Shortcuts, Dialog::History, Dialog::Palette, Dialog::RepairPreview};
     for (const Dialog dialog : dialogs) {
         Harness h;

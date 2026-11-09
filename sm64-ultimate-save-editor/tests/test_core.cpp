@@ -64,8 +64,8 @@ EepromBytes authenticFile() {
     EepromBytes b{};
     for (int slot = 0; slot < 4; ++slot) {
         const std::size_t p = P[static_cast<std::size_t>(slot)];
-        b[p + 11] = 0x01;                       // flags = FILE_EXISTS
-        b[p + 12] = 0x7F;                       // BOB: all seven stars
+        b[p + 11] = 0x01;                                  // flags = FILE_EXISTS
+        b[p + 12] = 0x7F;                                  // BOB: all seven stars
         b[p + 37] = static_cast<std::uint8_t>(10 + slot);  // BOB coin score
         referenceSign(b.data() + p, 56, 0x4441);
         std::copy_n(b.begin() + static_cast<std::ptrdiff_t>(p), 56,
@@ -224,6 +224,20 @@ TEST("regression: saving never rewrites the menu signature") {
     CHECK_EQ(written[0x1C0 + 28], std::uint8_t{0x48});
 }
 
+TEST("migration: a menu block that v1.0 signed with 'DA' is repaired by rebuilding its signature") {
+    EepromBytes file = authenticFile();
+    // Exactly what v1.0 produced: menu magic 'DA' with a checksum that matches that wrong magic.
+    referenceSign(file.data() + 0x1C0, 32, 0x4441);
+    referenceSign(file.data() + 0x1E0, 32, 0x4441);
+    Core core = loadedFrom(file, /*autoRepair=*/true);
+    CHECK(core.validate().pairs[4].status == PairStatus::BothInvalid);  // not auto-"repaired": no valid source
+    CHECK(core.repair().empty());
+    CHECK(core.rebuildChecksum(8));
+    CHECK(core.rebuildChecksum(9));
+    CHECK(core.validate().valid);
+    CHECK(core.view() == authenticFile());  // sound mode and coin ages were never touched by v1.0
+}
+
 TEST("regression: save does not silently rebuild checksums of a raw-edited block") {
     TempDir dir;
     Core core = loadedFrom(authenticFile());
@@ -302,9 +316,9 @@ TEST("structured edit changes only the intended bytes (plus checksums)") {
     CHECK(core.setFlag(0, save_flag::HaveWingCap, true));
     const EepromBytes& after = core.view();
     for (std::size_t i = 0; i < Size; ++i) {
-        const bool expected = i == P[0] + 11 || i == B[0] + 11 ||      // flags low byte
-                              i == P[0] + 55 || i == B[0] + 55 ||      // checksum low byte
-                              i == P[0] + 54 || i == B[0] + 54;        // checksum high byte (may be unchanged)
+        const bool expected = i == P[0] + 11 || i == B[0] + 11 ||  // flags low byte
+                              i == P[0] + 55 || i == B[0] + 55 ||  // checksum low byte
+                              i == P[0] + 54 || i == B[0] + 54;    // checksum high byte (may be unchanged)
         if (!expected) CHECK_EQ(after[i], before[i]);
     }
     CHECK_EQ(after[P[0] + 11], std::uint8_t{0x03});
@@ -364,15 +378,29 @@ TEST("every main-course star maps to exactly the intended bit") {
 }
 
 TEST("every secret star maps to its verified byte/bit (independent table)") {
-    struct Expected { std::size_t index; bool castle; std::size_t byteIndex; unsigned bit; };
+    struct Expected {
+        std::size_t index;
+        bool castle;
+        std::size_t byteIndex;
+        unsigned bit;
+    };
     // Written by hand from course_defines.h / save_file.h, not read from kSecretStars.
     const std::array<Expected, 15> expected{{
-        {0, false, 15, 0}, {1, false, 16, 0}, {2, false, 17, 0},   // BITDW, BITFS, BITS
-        {3, false, 18, 0}, {4, false, 18, 1},                      // PSS stars 1 and 2
-        {5, false, 19, 0}, {6, false, 20, 0}, {7, false, 21, 0},   // COTMC, TOTWC, VCUTM
-        {8, false, 22, 0}, {9, false, 23, 0},                      // WMOTR, SA
-        {10, true, 0, 24}, {11, true, 0, 25}, {12, true, 0, 26},   // Toad stars 1-3
-        {13, true, 0, 27}, {14, true, 0, 28},                      // MIPS stars 1-2
+        {0, false, 15, 0},
+        {1, false, 16, 0},
+        {2, false, 17, 0},  // BITDW, BITFS, BITS
+        {3, false, 18, 0},
+        {4, false, 18, 1},  // PSS stars 1 and 2
+        {5, false, 19, 0},
+        {6, false, 20, 0},
+        {7, false, 21, 0},  // COTMC, TOTWC, VCUTM
+        {8, false, 22, 0},
+        {9, false, 23, 0},  // WMOTR, SA
+        {10, true, 0, 24},
+        {11, true, 0, 25},
+        {12, true, 0, 26},  // Toad stars 1-3
+        {13, true, 0, 27},
+        {14, true, 0, 28},  // MIPS stars 1-2
     }};
     for (const Expected& e : expected) {
         Core core;
@@ -397,7 +425,7 @@ TEST("every secret star maps to its verified byte/bit (independent table)") {
 
 TEST("star totals follow the game: 7-bit popcount, cannon bit excluded, castle bits included") {
     SlotImage image{};
-    image[slot_field::CourseStars + 0] = 0xFF;   // bit 7 is the cannon flag, not a star
+    image[slot_field::CourseStars + 0] = 0xFF;    // bit 7 is the cannon flag, not a star
     image[slot_field::CourseStars + 3] = 0b0101;  // two stars
     image[slot_field::CourseStars + 24] = 0x01;   // unused byte still counts in the game's total
     setSlotFlags(image, (0b11U << 24) | save_flag::FileExists);
@@ -405,7 +433,7 @@ TEST("star totals follow the game: 7-bit popcount, cannon bit excluded, castle b
     CHECK_EQ(s.mainStars, 9);
     CHECK_EQ(s.secretStars, 3);
     CHECK_EQ(s.total, 12);
-    CHECK_EQ(s.mappedSecret, 2);   // the two castle stars; byte 24 is unmapped
+    CHECK_EQ(s.mappedSecret, 2);  // the two castle stars; byte 24 is unmapped
     CHECK_EQ(s.unmappedExtra, 1);
     CHECK(s.exceedsRetail());
 }
@@ -642,7 +670,7 @@ TEST("presets: copy slot, restore, sync and invalid parameters") {
 
     request.destSlot = 0;  // same slot
     CHECK(!applyPreset(core, request, error));
-    request.slot = 9;      // out of range
+    request.slot = 9;  // out of range
     CHECK(!applyPreset(core, request, error));
 
     // Restore from an invalid backup is refused.
@@ -720,7 +748,7 @@ TEST("a new edit clears the redo stack; no-op edits create no history") {
     CHECK(core.undo());
     CHECK(core.canRedo());
     CHECK(!core.setFlag(0, save_flag::FileExists, false));  // already off: nothing to do
-    CHECK(core.canRedo());                                   // redo survives a no-op
+    CHECK(core.canRedo());                                  // redo survives a no-op
     CHECK(core.setFlag(1, save_flag::FileExists, true));
     CHECK(!core.canRedo());
     CHECK_EQ(core.undoStack().size(), std::size_t{1});
@@ -758,7 +786,8 @@ TEST("dirty tracking follows the saved image, including undo back to saved state
 
 TEST("history is capped and never accesses outside the buffer") {
     Core core;
-    for (int i = 0; i < 400; ++i) CHECK(core.setCourseStar(0, static_cast<std::size_t>(i % 15), i % 7, (i / 105) % 2 == 0));
+    for (int i = 0; i < 400; ++i)
+        CHECK(core.setCourseStar(0, static_cast<std::size_t>(i % 15), i % 7, (i / 105) % 2 == 0));
     CHECK(core.undoStack().size() <= 256);
     for (std::size_t i = 0; i < 400 && core.canUndo(); ++i) CHECK(core.undo());
 }
@@ -1030,8 +1059,7 @@ TEST("describeChanges names flags, courses, coins and secret stars") {
     CHECK(core.setSecretStarFlag(1, 12, true));  // Toad star 3
     const auto changes = describeChanges(before, core.view());
     auto has = [&](const std::string& field) {
-        return std::any_of(changes.begin(), changes.end(),
-                           [&](const FieldChange& c) { return c.field == field; });
+        return std::any_of(changes.begin(), changes.end(), [&](const FieldChange& c) { return c.field == field; });
     };
     CHECK(has("Slot B: Castle moat drained"));
     CHECK(has("Slot B: Cool, Cool Mountain coin score"));

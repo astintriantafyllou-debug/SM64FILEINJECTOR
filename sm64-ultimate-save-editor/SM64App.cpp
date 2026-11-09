@@ -23,13 +23,16 @@ constexpr std::array<const char*, kPageCount> kPageNames{
     "Raw Data",  "Export",     "GameShark",    "Settings",        "About"};
 
 constexpr std::array<const char*, 12> kDialogNames{
-    "##none",           "Unsaved changes", "Create a new save", "Preview preset",
-    "Confirm overwrite", "Notice",         "Welcome",           "Keyboard shortcuts",
-    "Edit history",     "Command palette", "Repair preview",    "Please confirm"};
+    "##none",  "Unsaved changes",    "Create a new save", "Preview preset",  "Confirm overwrite", "Notice",
+    "Welcome", "Keyboard shortcuts", "Edit history",      "Command palette", "Repair preview",    "Please confirm"};
 
-bool expertOnly(Page page) { return page == Page::RawData || page == Page::GameShark; }
+bool expertOnly(Page page) {
+    return page == Page::RawData || page == Page::GameShark;
+}
 
-float em() { return ImGui::GetFontSize(); }
+float em() {
+    return ImGui::GetFontSize();
+}
 
 std::string lower(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(),
@@ -58,8 +61,7 @@ bool beginModal(const char* name, float widthEm) {
     ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
     ImGui::SetNextWindowSizeConstraints(ImVec2(std::min(24.0F * em(), maxW), 0.0F),
                                         ImVec2(width, viewport->WorkSize.y * 0.92F));
-    return ImGui::BeginPopupModal(name, nullptr,
-                                  ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+    return ImGui::BeginPopupModal(name, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 }
 
 }  // namespace
@@ -67,10 +69,8 @@ bool beginModal(const char* name, float widthEm) {
 // ---------------------------------------------------------------------------
 // Construction and host integration
 // ---------------------------------------------------------------------------
-App::App(sm64::Core& core, Platform& platform, sm64::Settings settings,
-         std::filesystem::path settingsPath)
-    : core_(core), platform_(platform), settings_(std::move(settings)),
-      settingsPath_(std::move(settingsPath)) {
+App::App(sm64::Core& core, Platform& platform, sm64::Settings settings, std::filesystem::path settingsPath)
+    : core_(core), platform_(platform), settings_(std::move(settings)), settingsPath_(std::move(settingsPath)) {
     hexBookmarks_ = {0x000, 0x070, 0x0E0, 0x150, 0x1C0};
     for (std::size_t i = 0; i < shownStars_.size(); ++i) {
         shownStars_[i] = static_cast<float>(core_.stars(static_cast<int>(i)).total);
@@ -167,8 +167,7 @@ void App::saveNotes() {
         return;
     }
     if (sm64::atomicWriteFile(
-            notesPath(),
-            std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(text.data()), text.size()),
+            notesPath(), std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(text.data()), text.size()),
             options, error)) {
         notesDirty_ = false;
         toast("Notes saved next to the save file (they are not stored inside the EEPROM).", Status::Info);
@@ -197,20 +196,19 @@ void App::loadFrom(const std::filesystem::path& path) {
     if (report.valid) {
         toast("Opened " + path.filename().string() + " - all 10 blocks are valid.", Status::Good);
     } else {
-        toast("Opened " + path.filename().string() +
-                  " - problems found. Open Validation & Repair for details.",
+        toast("Opened " + path.filename().string() + " - problems found. Open Validation & Repair for details.",
               Status::Warning);
     }
     if (core_.detectedOrder() != sm64::ByteOrder::Native) {
-        toast(std::string("Byte order converted: ") + sm64::byteOrderName(core_.detectedOrder()),
-              Status::Info);
+        toast(std::string("Byte order converted: ") + sm64::byteOrderName(core_.detectedOrder()), Status::Info);
     }
 }
 
 bool App::saveTo(const std::filesystem::path& path) {
     if (settings_.forensic) {
-        notice("Read-only mode", "Forensic (read-only) mode is on, so nothing can be saved over a file. "
-                                 "Use Export to write a copy, or turn the mode off in Settings.");
+        notice("Read-only mode",
+               "Forensic (read-only) mode is on, so nothing can be saved over a file. "
+               "Use Export to write a copy, or turn the mode off in Settings.");
         return false;
     }
     sm64::Core::SaveOptions options;
@@ -335,8 +333,8 @@ void App::exportTo(const std::filesystem::path& path) {
         notice("Export failed", error);
         return;
     }
-    toast("Exported " + path.filename().string() + " (" +
-              std::to_string(sm64::profileInfo(profile).outputSize) + " bytes).",
+    toast("Exported " + path.filename().string() + " (" + std::to_string(sm64::profileInfo(profile).outputSize) +
+              " bytes).",
           Status::Good);
 }
 
@@ -381,11 +379,17 @@ void App::handleShortcuts() {
     if (io.WantTextInput || dialog_ != Dialog::None) return;
     if (!io.KeyCtrl) return;
     if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) {
-        if (io.KeyShift) actionRedo(); else actionUndo();
+        if (io.KeyShift)
+            actionRedo();
+        else
+            actionUndo();
     } else if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
         actionRedo();
     } else if (ImGui::IsKeyPressed(ImGuiKey_S, false)) {
-        if (io.KeyShift) actionSaveAs(); else actionSave();
+        if (io.KeyShift)
+            actionSaveAs();
+        else
+            actionSave();
     } else if (ImGui::IsKeyPressed(ImGuiKey_O, false)) {
         actionOpen();
     } else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
@@ -461,8 +465,14 @@ void App::drawMenuBar() {
     }
 
     if (ImGui::BeginMenu("View")) {
-        if (ImGui::MenuItem("Beginner mode", nullptr, !settings_.expert)) { setExpert(false); persistSettings(); }
-        if (ImGui::MenuItem("Expert mode", nullptr, settings_.expert)) { setExpert(true); persistSettings(); }
+        if (ImGui::MenuItem("Beginner mode", nullptr, !settings_.expert)) {
+            setExpert(false);
+            persistSettings();
+        }
+        if (ImGui::MenuItem("Expert mode", nullptr, settings_.expert)) {
+            setExpert(true);
+            persistSettings();
+        }
         ImGui::Separator();
         if (ImGui::MenuItem("Dark theme", nullptr, settings_.darkTheme)) {
             settings_.darkTheme = true;
@@ -490,7 +500,10 @@ void App::drawMenuBar() {
     }
 
     if (ImGui::BeginMenu("Help")) {
-        if (ImGui::MenuItem("Welcome tour")) { tutorialStep_ = 0; openDialog(Dialog::Welcome); }
+        if (ImGui::MenuItem("Welcome tour")) {
+            tutorialStep_ = 0;
+            openDialog(Dialog::Welcome);
+        }
         if (ImGui::MenuItem("Keyboard shortcuts")) openDialog(Dialog::Shortcuts);
         if (ImGui::MenuItem("About")) page_ = Page::About;
         ImGui::EndMenu();
@@ -633,9 +646,9 @@ void App::drawNavCompact() {
 
 void App::drawContent() {
     const ImGuiStyle& style = ImGui::GetStyle();
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(style.WindowPadding.x * 1.4F, style.WindowPadding.y * 1.2F));
-    ImGui::BeginChild("##page", ImVec2(0.0F, 0.0F), ImGuiChildFlags_AlwaysUseWindowPadding,
-                      ImGuiWindowFlags_None);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,
+                        ImVec2(style.WindowPadding.x * 1.4F, style.WindowPadding.y * 1.2F));
+    ImGui::BeginChild("##page", ImVec2(0.0F, 0.0F), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_None);
     ImGui::PopStyleVar();
 
     ImGui::SetWindowFontScale(1.35F);
@@ -650,16 +663,36 @@ void App::drawContent() {
     }
 
     switch (page_) {
-        case Page::Dashboard: pageDashboard(); break;
-        case Page::Slots: pageSlots(); break;
-        case Page::SecretStars: pageSecretStars(); break;
-        case Page::Castle: pageCastle(); break;
-        case Page::Validation: pageValidation(); break;
-        case Page::RawData: pageRawData(); break;
-        case Page::Export: pageExport(); break;
-        case Page::GameShark: pageGameShark(); break;
-        case Page::Settings: pageSettings(); break;
-        case Page::About: pageAbout(); break;
+        case Page::Dashboard:
+            pageDashboard();
+            break;
+        case Page::Slots:
+            pageSlots();
+            break;
+        case Page::SecretStars:
+            pageSecretStars();
+            break;
+        case Page::Castle:
+            pageCastle();
+            break;
+        case Page::Validation:
+            pageValidation();
+            break;
+        case Page::RawData:
+            pageRawData();
+            break;
+        case Page::Export:
+            pageExport();
+            break;
+        case Page::GameShark:
+            pageGameShark();
+            break;
+        case Page::Settings:
+            pageSettings();
+            break;
+        case Page::About:
+            pageAbout();
+            break;
     }
     ImGui::EndChild();
 }
@@ -671,15 +704,18 @@ void App::drawStatusBar() {
     const sm64::Report report = core_.validate();
     int bad = 0;
     for (std::size_t id = 0; id < sm64::kBlockCount; ++id) bad += report.block(id).valid() ? 0 : 1;
-    if (report.valid) statusLabel(Status::Good, "All 10 blocks valid");
-    else statusLabel(Status::Bad, (std::to_string(bad) + " block(s) invalid").c_str());
+    if (report.valid)
+        statusLabel(Status::Good, "All 10 blocks valid");
+    else
+        statusLabel(Status::Bad, (std::to_string(bad) + " block(s) invalid").c_str());
     ImGui::SameLine();
     ImGui::TextDisabled("|");
     ImGui::SameLine();
     ImGui::TextUnformatted(displayName().c_str());
     ImGui::SameLine();
     ImGui::TextDisabled("512 bytes");
-    if (!core_.lastAction().empty() && ImGui::GetContentRegionAvail().x > 26.0F * em()) {
+    if (!core_.lastAction().empty() &&
+        ImGui::GetContentRegionAvail().x > ImGui::CalcTextSize(core_.lastAction().c_str()).x + 4.0F * em()) {
         ImGui::SameLine();
         ImGui::TextDisabled("|");
         ImGui::SameLine();
@@ -707,7 +743,8 @@ void App::drawToasts() {
         ImVec4 edge = statusColor(level);
         edge.w = fade;
         dl->AddRect(min, max, ImGui::GetColorU32(edge), 6.0F, 0, 1.5F);
-        dl->AddRectFilled(min, ImVec2(min.x + 4.0F, max.y), ImGui::GetColorU32(edge), 6.0F, ImDrawFlags_RoundCornersLeft);
+        dl->AddRectFilled(min, ImVec2(min.x + 4.0F, max.y), ImGui::GetColorU32(edge), 6.0F,
+                          ImDrawFlags_RoundCornersLeft);
         ImVec4 fg = ImGui::GetStyleColorVec4(ImGuiCol_Text);
         fg.w = fade;
         dl->AddText(nullptr, 0.0F, ImVec2(min.x + pad * 1.6F, min.y + pad * 0.8F), ImGui::GetColorU32(fg),
@@ -727,18 +764,41 @@ void App::drawDialogs() {
         dialogJustOpened_ = false;
     }
     switch (dialog_) {
-        case Dialog::Unsaved: dialogUnsaved(); break;
-        case Dialog::NewSave: dialogNewSave(); break;
-        case Dialog::Preset: dialogPreset(); break;
-        case Dialog::Overwrite: dialogOverwrite(); break;
-        case Dialog::Notice: dialogNotice(); break;
-        case Dialog::Welcome: dialogWelcome(); break;
-        case Dialog::Shortcuts: dialogShortcuts(); break;
-        case Dialog::History: dialogHistory(); break;
-        case Dialog::Palette: dialogPalette(); break;
-        case Dialog::RepairPreview: dialogRepairPreview(); break;
-        case Dialog::Confirm: dialogConfirm(); break;
-        case Dialog::None: break;
+        case Dialog::Unsaved:
+            dialogUnsaved();
+            break;
+        case Dialog::NewSave:
+            dialogNewSave();
+            break;
+        case Dialog::Preset:
+            dialogPreset();
+            break;
+        case Dialog::Overwrite:
+            dialogOverwrite();
+            break;
+        case Dialog::Notice:
+            dialogNotice();
+            break;
+        case Dialog::Welcome:
+            dialogWelcome();
+            break;
+        case Dialog::Shortcuts:
+            dialogShortcuts();
+            break;
+        case Dialog::History:
+            dialogHistory();
+            break;
+        case Dialog::Palette:
+            dialogPalette();
+            break;
+        case Dialog::RepairPreview:
+            dialogRepairPreview();
+            break;
+        case Dialog::Confirm:
+            dialogConfirm();
+            break;
+        case Dialog::None:
+            break;
     }
     if (dialog_ != Dialog::None && !ImGui::IsPopupOpen(name)) dialog_ = Dialog::None;
 }
@@ -747,8 +807,10 @@ void App::dialogUnsaved() {
     if (!beginModal("Unsaved changes", 34.0F)) return;
     statusLabel(Status::Warning, "This file has unsaved changes.");
     ImGui::Spacing();
-    ImGui::TextWrapped("%s", ("\"" + displayName() + "\" has changes that have not been written to disk. "
-                              "If you continue without saving, they will be lost.").c_str());
+    ImGui::TextWrapped("%s", ("\"" + displayName() +
+                              "\" has changes that have not been written to disk. "
+                              "If you continue without saving, they will be lost.")
+                                 .c_str());
     const auto changes = core_.pendingChanges();
     if (!changes.empty()) {
         ImGui::Spacing();
@@ -853,8 +915,9 @@ void App::dialogPreset() {
         if (ImGui::InputInt("Seed", &seed)) presetRequest_.seed = static_cast<std::uint32_t>(std::max(1, seed));
         ImGui::SameLine();
         if (ImGui::Button("Roll")) {
-            presetRequest_.seed = static_cast<std::uint32_t>(
-                std::chrono::steady_clock::now().time_since_epoch().count() & 0x7FFFFFFFLL) | 1U;
+            presetRequest_.seed =
+                static_cast<std::uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count() & 0x7FFFFFFFLL) |
+                1U;
         }
     }
 
@@ -873,8 +936,8 @@ void App::dialogPreset() {
         ImGui::TextWrapped("%s", plan.summary.c_str());
         ImGui::Spacing();
         ImGui::Text("%zu field(s) will change:", plan.changes.size());
-        const float height = std::min(14.0F * ImGui::GetTextLineHeightWithSpacing(),
-                                      ImGui::GetMainViewport()->WorkSize.y * 0.4F);
+        const float height =
+            std::min(14.0F * ImGui::GetTextLineHeightWithSpacing(), ImGui::GetMainViewport()->WorkSize.y * 0.4F);
         if (ImGui::BeginTable("##presetchanges", 3,
                               ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY |
                                   ImGuiTableFlags_SizingStretchProp,
@@ -927,12 +990,17 @@ void App::dialogPreset() {
 
 void App::dialogNewSave() {
     if (!beginModal("Create a new save", 44.0F)) return;
-    ImGui::TextWrapped("Choose a starting point. The new file is created in memory with correct signatures, "
-                       "checksums and mirrored copies. It is not written to disk until you save it.");
+    ImGui::TextWrapped(
+        "Choose a starting point. The new file is created in memory with correct signatures, "
+        "checksums and mirrored copies. It is not written to disk until you save it.");
     ImGui::Spacing();
-    struct Choice { const char* name; const char* description; };
+    struct Choice {
+        const char* name;
+        const char* description;
+    };
     static const std::array<Choice, 5> choices{{
-        {"Blank valid EEPROM", "Four empty slots and a default menu block, exactly as the game writes a fresh cartridge."},
+        {"Blank valid EEPROM",
+         "Four empty slots and a default menu block, exactly as the game writes a fresh cartridge."},
         {"New occupied Slot A", "Slot A exists but has no stars and no switches."},
         {"Slot A with all caps unlocked", "Occupied Slot A with the red, green and blue switches pressed."},
         {"Slot A with 70 stars", "Exactly 70 stars, caps and castle access. Handy for testing late-game areas."},
@@ -957,9 +1025,9 @@ void App::dialogNewSave() {
     if (newSaveChoice_ >= 2) {
         sm64::PresetRequest request;
         request.slot = 0;
-        request.id = newSaveChoice_ == 2 ? sm64::PresetId::UnlockAllCaps
-                    : newSaveChoice_ == 3 ? sm64::PresetId::Progress70Stars
-                                          : sm64::PresetId::Complete120Stars;
+        request.id = newSaveChoice_ == 2   ? sm64::PresetId::UnlockAllCaps
+                     : newSaveChoice_ == 3 ? sm64::PresetId::Progress70Stars
+                                           : sm64::PresetId::Complete120Stars;
         candidate = sm64::planPreset(candidate, request).after;
     }
     const sm64::Report report = sm64::validateBytes(candidate);
@@ -999,7 +1067,10 @@ void App::dialogNewSave() {
 
 void App::dialogWelcome() {
     if (!beginModal("Welcome", 42.0F)) return;
-    struct Step { const char* title; const char* body; };
+    struct Step {
+        const char* title;
+        const char* body;
+    };
     static const std::array<Step, 4> steps{{
         {"Welcome to the SM64 Save Editor",
          "This editor changes Super Mario 64 save files (512-byte EEPROM dumps). You do not need to know "
@@ -1048,12 +1119,18 @@ void App::dialogWelcome() {
 void App::dialogShortcuts() {
     if (!beginModal("Keyboard shortcuts", 40.0F)) return;
     static const char* rows[][2] = {
-        {"Ctrl+N", "New save"},          {"Ctrl+O", "Open"},
-        {"Ctrl+S", "Save"},              {"Ctrl+Shift+S", "Save as"},
-        {"Ctrl+Z", "Undo"},              {"Ctrl+Y / Ctrl+Shift+Z", "Redo"},
-        {"Ctrl+K", "Command palette"},   {"Tab / Arrow keys", "Move between controls"},
-        {"Space", "Toggle the focused checkbox"}, {"Hex editor: 0-9, A-F", "Type a byte (two digits)"},
-        {"Hex editor: arrows", "Move the cursor"}, {"Hex editor: Shift+arrows", "Extend the selection"},
+        {"Ctrl+N", "New save"},
+        {"Ctrl+O", "Open"},
+        {"Ctrl+S", "Save"},
+        {"Ctrl+Shift+S", "Save as"},
+        {"Ctrl+Z", "Undo"},
+        {"Ctrl+Y / Ctrl+Shift+Z", "Redo"},
+        {"Ctrl+K", "Command palette"},
+        {"Tab / Arrow keys", "Move between controls"},
+        {"Space", "Toggle the focused checkbox"},
+        {"Hex editor: 0-9, A-F", "Type a byte (two digits)"},
+        {"Hex editor: arrows", "Move the cursor"},
+        {"Hex editor: Shift+arrows", "Extend the selection"},
     };
     if (ImGui::BeginTable("##shortcuts", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) {
         for (const auto& row : rows) {
@@ -1079,7 +1156,8 @@ void App::historyList() {
         detail::mutedText("No edits yet.");
         return;
     }
-    const float height = std::min(16.0F * ImGui::GetTextLineHeightWithSpacing(), ImGui::GetMainViewport()->WorkSize.y * 0.45F);
+    const float height =
+        std::min(16.0F * ImGui::GetTextLineHeightWithSpacing(), ImGui::GetMainViewport()->WorkSize.y * 0.45F);
     if (ImGui::BeginChild("##historylist", ImVec2(0.0F, height), ImGuiChildFlags_Borders)) {
         int index = 0;
         for (auto it = core_.redoStack().begin(); it != core_.redoStack().end(); ++it, ++index) {
@@ -1089,7 +1167,8 @@ void App::historyList() {
         }
         for (auto it = stack.rbegin(); it != stack.rend(); ++it, ++index) {
             ImGui::PushID(index);
-            ImGui::Text("%d. %s", static_cast<int>(stack.size()) - (index - static_cast<int>(core_.redoStack().size())), it->description.c_str());
+            ImGui::Text("%d. %s", static_cast<int>(stack.size()) - (index - static_cast<int>(core_.redoStack().size())),
+                        it->description.c_str());
             ImGui::PopID();
         }
     }
@@ -1121,10 +1200,12 @@ void App::dialogRepairPreview() {
     if (!beginModal("Repair preview", 44.0F)) return;
     const auto plan = core_.planRepair();
     if (plan.empty()) {
-        statusLabel(Status::Info, "No block has exactly one valid copy, so there is nothing safe to repair automatically.");
+        statusLabel(Status::Info,
+                    "No block has exactly one valid copy, so there is nothing safe to repair automatically.");
     } else {
-        ImGui::TextWrapped("These blocks have one valid copy and one invalid copy. The invalid copy will be "
-                           "overwritten with the valid one:");
+        ImGui::TextWrapped(
+            "These blocks have one valid copy and one invalid copy. The invalid copy will be "
+            "overwritten with the valid one:");
         ImGui::Spacing();
         for (std::size_t i = 0; i < plan.size(); ++i) {
             ImGui::PushID(static_cast<int>(i));
@@ -1171,9 +1252,25 @@ void App::dialogPalette() {
         if (expertOnly(page) && !settings_.expert) continue;
         commands.push_back({std::string("Go to ") + kPageNames[i], [this, page] { page_ = page; }, true});
     }
-    commands.push_back({"Switch to Expert mode", [this] { setExpert(true); persistSettings(); }, !settings_.expert});
-    commands.push_back({"Switch to Beginner mode", [this] { setExpert(false); persistSettings(); }, settings_.expert});
-    commands.push_back({"Toggle dark/light theme", [this] { settings_.darkTheme = !settings_.darkTheme; markStyleDirty(); persistSettings(); }, true});
+    commands.push_back({"Switch to Expert mode",
+                        [this] {
+                            setExpert(true);
+                            persistSettings();
+                        },
+                        !settings_.expert});
+    commands.push_back({"Switch to Beginner mode",
+                        [this] {
+                            setExpert(false);
+                            persistSettings();
+                        },
+                        settings_.expert});
+    commands.push_back({"Toggle dark/light theme",
+                        [this] {
+                            settings_.darkTheme = !settings_.darkTheme;
+                            markStyleDirty();
+                            persistSettings();
+                        },
+                        true});
     commands.push_back({"Show keyboard shortcuts", [this] { openDialog(Dialog::Shortcuts); }, true});
     commands.push_back({"Show edit history", [this] { openDialog(Dialog::History); }, true});
     for (const sm64::PresetInfo& info : sm64::presetCatalog()) {
@@ -1190,7 +1287,8 @@ void App::dialogPalette() {
     for (std::size_t i = 0; i < commands.size(); ++i) {
         if (query.empty() || lower(commands[i].name).find(query) != std::string::npos) matches.push_back(i);
     }
-    const float height = std::min(12.0F * ImGui::GetTextLineHeightWithSpacing(), ImGui::GetMainViewport()->WorkSize.y * 0.45F);
+    const float height =
+        std::min(12.0F * ImGui::GetTextLineHeightWithSpacing(), ImGui::GetMainViewport()->WorkSize.y * 0.45F);
     std::size_t chosen = commands.size();
     if (ImGui::BeginChild("##commands", ImVec2(0.0F, height), ImGuiChildFlags_Borders)) {
         for (std::size_t k = 0; k < matches.size(); ++k) {

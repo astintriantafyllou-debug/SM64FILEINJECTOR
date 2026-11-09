@@ -4,83 +4,152 @@ on:
   push:
     branches:
       - main
+      - ui-polish
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_DIR: sm64-ultimate-save-editor
+
 jobs:
-  build-windows:
-    name: Build Windows
-    runs-on: windows-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Configure
-        shell: pwsh
-        run: |
-          cmake `
-            -S sm64-ultimate-save-editor `
-            -B build `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
-
-      - name: Build
-        run: cmake --build build --config Release --parallel
-
-      - name: Install
-        run: cmake --install build --config Release
-
-      - name: Upload Windows application
-        uses: actions/upload-artifact@v4
-        with:
-          name: sm64-ultimate-windows
-          path: stage/bin/**
-          if-no-files-found: error
-
-  build-linux:
-    name: Build Linux
+  format:
+    name: clang-format
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: |
+          # Pinned: different clang-format versions format slightly differently.
+          pip install clang-format==18.1.3
+          git ls-files "$PROJECT_DIR/*.cpp" "$PROJECT_DIR/*.hpp" | xargs clang-format --dry-run -Werror
 
-      - name: Install Linux dependencies
+  tidy:
+    name: clang-tidy (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure (engine only)
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            git \
-            libgl1-mesa-dev \
-            libx11-dev \
-            libxext-dev \
-            libxrandr-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libxinerama-dev
-
-      - name: Configure
+          sudo apt-get install -y clang clang-tidy cmake ninja-build
+          cmake -S "$PROJECT_DIR" -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++ -DSM64_BUILD_GUI=OFF -DSM64_BUILD_TESTS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Run clang-tidy on the engine
         run: |
-          cmake \
-            -S sm64-ultimate-save-editor \
-            -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/stage"
+          clang-tidy -p build \
+            -checks='-*,bugprone-*,clang-analyzer-*,performance-*,-bugprone-easily-swappable-parameters' \
+            "$PROJECT_DIR"/SM64SystemCore.cpp "$PROJECT_DIR"/SM64FileIO.cpp "$PROJECT_DIR"/SM64Export.cpp \
+            "$PROJECT_DIR"/SM64Describe.cpp "$PROJECT_DIR"/SM64Presets.cpp "$PROJECT_DIR"/SM64Report.cpp \
+            "$PROJECT_DIR"/SM64Settings.cpp
+
+  sanitize:
+    name: Sanitizers (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang
+      - name: Configure (ASan + UBSan, warnings are errors)
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then CXX=clang++; CC=clang; else CXX=g++; CC=gcc; fi
+          cmake -S "$PROJECT_DIR" -B build -G Ninja \
+            -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DSM64_BUILD_GUI=OFF -DSM64_SANITIZE=ON -DSM64_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --timeout 1800
+
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows (MSVC)
+            os: windows-latest
+            artifact: SM64-Ultimate-Windows-x64
+            upload: true
+            werror: "OFF"
+          - name: Linux (GCC)
+            os: ubuntu-latest
+            artifact: SM64-Ultimate-Linux-x64
+            upload: true
+            cxx: g++
+            cc: gcc
+            werror: "ON"
+          - name: Linux (Clang)
+            os: ubuntu-latest
+            upload: false
+            cxx: clang++
+            cc: clang
+            werror: "ON"
+          - name: macOS (Apple Clang)
+            os: macos-latest
+            artifact: SM64-Ultimate-macOS
+            upload: true
+            werror: "OFF"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/^ *VERSION \([0-9][0-9.]*\)$/\1/p' "$PROJECT_DIR/CMakeLists.txt" | head -1)
+          test -n "$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build git clang \
+            libgl1-mesa-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxinerama-dev libxss-dev libxkbcommon-dev
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S "$PROJECT_DIR" -B build -G Ninja \
+            -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_BUILD_TYPE=Release -DSM64_WARNINGS_AS_ERRORS=${{ matrix.werror }}
+
+      - name: Configure (Windows / macOS)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          cmake -S "$PROJECT_DIR" -B build -DCMAKE_BUILD_TYPE=Release \
+            -DSM64_WARNINGS_AS_ERRORS=${{ matrix.werror }}
 
       - name: Build
         run: cmake --build build --config Release --parallel
 
-      - name: Install
-        run: cmake --install build --config Release
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
 
-      - name: Upload Linux application
+      - name: Stage
+        if: matrix.upload
+        run: cmake --install build --config Release --prefix stage
+
+      - name: Upload ${{ matrix.artifact }}
+        if: matrix.upload
         uses: actions/upload-artifact@v4
         with:
-          name: sm64-ultimate-linux
-          path: stage/bin/**
+          name: ${{ matrix.artifact }}-v${{ env.VERSION }}
+          path: stage/**
           if-no-files-found: error

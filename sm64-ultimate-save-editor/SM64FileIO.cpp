@@ -58,8 +58,9 @@ bool atomicWriteFile(const std::filesystem::path& path, std::span<const std::uin
 
     std::FILE* file = openForWrite(temporary);
     if (file == nullptr) {
-        error = "Cannot create the temporary output file next to the destination. "
-                "The original file was not touched.";
+        error =
+            "Cannot create the temporary output file next to the destination. "
+            "The original file was not touched.";
         return false;
     }
 
@@ -95,8 +96,7 @@ bool atomicWriteFile(const std::filesystem::path& path, std::span<const std::uin
             if (ec) {
                 std::error_code ignored;
                 fs::remove(temporary, ignored);
-                error = "Could not create the backup copy (" + ec.message() +
-                        "). The original file was not touched.";
+                error = "Could not create the backup copy (" + ec.message() + "). The original file was not touched.";
                 return false;
             }
         }
@@ -106,8 +106,7 @@ bool atomicWriteFile(const std::filesystem::path& path, std::span<const std::uin
     if (ec) {
         std::error_code ignored;
         fs::remove(temporary, ignored);
-        error = "Could not replace the destination file (" + ec.message() +
-                "). The original file was not touched.";
+        error = "Could not replace the destination file (" + ec.message() + "). The original file was not touched.";
         return false;
     }
 

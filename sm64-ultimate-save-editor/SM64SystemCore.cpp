@@ -28,8 +28,12 @@ std::string pairTitle(std::size_t pair) {
     return pair < kSlotCount ? "slot " + slotLetter(static_cast<int>(pair)) : "menu block";
 }
 
-std::size_t primaryId(std::size_t pair) { return pair < kSlotCount ? pair * 2U : 8U; }
-std::size_t backupId(std::size_t pair) { return pair < kSlotCount ? pair * 2U + 1U : 9U; }
+std::size_t primaryId(std::size_t pair) {
+    return pair < kSlotCount ? pair * 2U : 8U;
+}
+std::size_t backupId(std::size_t pair) {
+    return pair < kSlotCount ? pair * 2U + 1U : 9U;
+}
 
 EepromBytes swap16(EepromBytes bytes) noexcept {
     for (std::size_t i = 0; i + 1U < bytes.size(); i += 2U) std::swap(bytes[i], bytes[i + 1U]);
@@ -102,9 +106,12 @@ EepromBytes makeBlankEeprom() {
 
 const char* byteOrderName(ByteOrder order) noexcept {
     switch (order) {
-        case ByteOrder::Native: return "Canonical (big-endian, as the game stores it)";
-        case ByteOrder::Swapped16: return "16-bit byte-swapped (converted on load)";
-        case ByteOrder::Swapped32: return "32-bit byte-swapped (converted on load)";
+        case ByteOrder::Native:
+            return "Canonical (big-endian, as the game stores it)";
+        case ByteOrder::Swapped16:
+            return "16-bit byte-swapped (converted on load)";
+        case ByteOrder::Swapped32:
+            return "32-bit byte-swapped (converted on load)";
     }
     return "Unknown";
 }
@@ -119,12 +126,14 @@ Report validateBytes(const EepromBytes& bytes) {
     for (std::size_t id = 0; id < kBlockCount; ++id) {
         const BlockInfo info = blockInfo(id);
         const BlockState state = inspectBlock(bytes.data() + info.offset, info.size, info.magic);
-        if (id < 8U) report.slots[id] = state; else report.menu[id - 8U] = state;
+        if (id < 8U)
+            report.slots[id] = state;
+        else
+            report.menu[id - 8U] = state;
         if (!state.valid()) {
             report.valid = false;
-            report.notes.push_back(
-                blockTitle(id) + ": " + (!state.magic ? "signature is not " : "checksum mismatch") +
-                (!state.magic ? ("0x" + hex(info.magic, 4)) : ""));
+            report.notes.push_back(blockTitle(id) + ": " + (!state.magic ? "signature is not " : "checksum mismatch") +
+                                   (!state.magic ? ("0x" + hex(info.magic, 4)) : ""));
         }
     }
 
@@ -146,8 +155,7 @@ Report validateBytes(const EepromBytes& bytes) {
             out.text = "Primary and backup are valid and identical.";
         } else if (pv && bv) {
             out.status = PairStatus::BothValidDifferent;
-            out.text = "Both copies are valid but differ in " +
-                       std::to_string(out.differingOffsets.size()) +
+            out.text = "Both copies are valid but differ in " + std::to_string(out.differingOffsets.size()) +
                        " byte(s). This editor cannot tell which is newer, so you must choose. "
                        "(The game itself reads the primary copy.)";
         } else if (pv) {
@@ -160,8 +168,10 @@ Report validateBytes(const EepromBytes& bytes) {
             out.text = "The primary copy is invalid. It can be restored from the valid backup copy.";
         } else {
             out.status = PairStatus::BothInvalid;
-            out.text = "Neither copy is valid, so there is nothing trustworthy to restore from. "
-                       "On boot the game would erase this " + title + ".";
+            out.text =
+                "Neither copy is valid, so there is nothing trustworthy to restore from. "
+                "On boot the game would erase this " +
+                title + ".";
         }
     }
     return report;
@@ -218,8 +228,8 @@ bool Core::loadBytes(std::span<const std::uint8_t> input, bool autoRepair, std::
 
     if (autoRepair) {
         const auto actions = repair();
-        if (!actions.empty()) lastAction_ = "Loaded file and auto-repaired " +
-                                            std::to_string(actions.size()) + " block pair(s)";
+        if (!actions.empty())
+            lastAction_ = "Loaded file and auto-repaired " + std::to_string(actions.size()) + " block pair(s)";
     }
     return true;
 }
@@ -228,8 +238,7 @@ bool Core::load(const std::filesystem::path& path, bool autoRepair, std::string&
     std::error_code ec;
     const auto fileSize = std::filesystem::file_size(path, ec);
     if (!ec && fileSize != Size) {
-        error = "This file is " + std::to_string(fileSize) +
-                " bytes. A retail SM64 EEPROM save is exactly 512 bytes.";
+        error = "This file is " + std::to_string(fileSize) + " bytes. A retail SM64 EEPROM save is exactly 512 bytes.";
         return false;
     }
 
@@ -238,8 +247,7 @@ bool Core::load(const std::filesystem::path& path, bool autoRepair, std::string&
         error = "Cannot open the selected file.";
         return false;
     }
-    std::vector<std::uint8_t> buffer((std::istreambuf_iterator<char>(input)),
-                                     std::istreambuf_iterator<char>());
+    std::vector<std::uint8_t> buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     return loadBytes(buffer, autoRepair, error);
 }
 
@@ -247,8 +255,7 @@ bool Core::save(const std::filesystem::path& path, std::string& error) {
     return save(path, SaveOptions{}, error);
 }
 
-bool Core::save(const std::filesystem::path& path, const SaveOptions& options,
-                std::string& error) {
+bool Core::save(const std::filesystem::path& path, const SaveOptions& options, std::string& error) {
     AtomicWriteOptions write{};
     write.makeBackup = options.makeBackup;
     write.failBeforeCommit = options.failBeforeCommit;
@@ -256,8 +263,7 @@ bool Core::save(const std::filesystem::path& path, const SaveOptions& options,
 
     // Post-save verification: read the file back and compare every byte.
     std::ifstream verify(path, std::ios::binary);
-    std::vector<std::uint8_t> readBack((std::istreambuf_iterator<char>(verify)),
-                                       std::istreambuf_iterator<char>());
+    std::vector<std::uint8_t> readBack((std::istreambuf_iterator<char>(verify)), std::istreambuf_iterator<char>());
     if (readBack.size() != Size || !std::equal(readBack.begin(), readBack.end(), data_.begin())) {
         error = "The file was written but did not read back identically. Do not rely on it.";
         return false;
@@ -269,8 +275,7 @@ bool Core::save(const std::filesystem::path& path, const SaveOptions& options,
     return true;
 }
 
-bool Core::exportFile(const std::filesystem::path& path, Profile profile,
-                      std::string& error) const {
+bool Core::exportFile(const std::filesystem::path& path, Profile profile, std::string& error) const {
     const std::vector<std::uint8_t> output = renderExport(data_, profile);
     AtomicWriteOptions write{};
     return atomicWriteFile(path, output, write, error);
@@ -291,8 +296,7 @@ void Core::markSaved() {
 SlotImage Core::slotImage(int slot) const {
     SlotImage image{};
     if (slot < 0 || slot >= static_cast<int>(kSlotCount)) return image;
-    std::copy_n(data_.begin() + static_cast<std::ptrdiff_t>(P[static_cast<std::size_t>(slot)]),
-                Block, image.begin());
+    std::copy_n(data_.begin() + static_cast<std::ptrdiff_t>(P[static_cast<std::size_t>(slot)]), Block, image.begin());
     return image;
 }
 
@@ -303,12 +307,10 @@ StarSummary Core::stars(int slot) const {
 // ---------------------------------------------------------------------------
 // History
 // ---------------------------------------------------------------------------
-bool Core::applyEdit(const std::string& description, const Bytes& after,
-                     const std::string& coalesceKey) {
+bool Core::applyEdit(const std::string& description, const Bytes& after, const std::string& coalesceKey) {
     if (after == data_) return false;
 
-    if (!coalesceKey.empty() && coalesceOpen_ && !undo_.empty() &&
-        undo_.back().coalesceKey == coalesceKey) {
+    if (!coalesceKey.empty() && coalesceOpen_ && !undo_.empty() && undo_.back().coalesceKey == coalesceKey) {
         HistoryEntry& last = undo_.back();
         last.after = after;
         data_ = after;
@@ -359,9 +361,8 @@ bool Core::set(std::size_t index, std::uint8_t value) {
     if (index >= Size) return false;
     Bytes after = data_;
     after[index] = value;
-    return applyEdit("Edit byte 0x" + hex(index, 3) + ": " + hex(data_[index], 2) + " -> " +
-                         hex(value, 2),
-                     after, "byte:" + std::to_string(index));
+    return applyEdit("Edit byte 0x" + hex(index, 3) + ": " + hex(data_[index], 2) + " -> " + hex(value, 2), after,
+                     "byte:" + std::to_string(index));
 }
 
 bool Core::setMirrored(int slot, std::size_t relativeOffset, std::uint8_t value) {
@@ -370,8 +371,7 @@ bool Core::setMirrored(int slot, std::size_t relativeOffset, std::uint8_t value)
     Bytes after = data_;
     after[P[s] + relativeOffset] = value;
     after[B[s] + relativeOffset] = value;
-    return applyEdit("Edit slot " + slotLetter(slot) + " byte " + std::to_string(relativeOffset) +
-                         " (both copies)",
+    return applyEdit("Edit slot " + slotLetter(slot) + " byte " + std::to_string(relativeOffset) + " (both copies)",
                      after, "mirror:" + std::to_string(slot) + ":" + std::to_string(relativeOffset));
 }
 
@@ -379,12 +379,10 @@ bool Core::pasteBytes(std::size_t offset, std::span<const std::uint8_t> bytes) {
     if (bytes.empty() || offset >= Size || bytes.size() > Size - offset) return false;
     Bytes after = data_;
     std::copy(bytes.begin(), bytes.end(), after.begin() + static_cast<std::ptrdiff_t>(offset));
-    return applyEdit("Paste " + std::to_string(bytes.size()) + " byte(s) at 0x" + hex(offset, 3),
-                     after);
+    return applyEdit("Paste " + std::to_string(bytes.size()) + " byte(s) at 0x" + hex(offset, 3), after);
 }
 
-bool Core::editSlot(int slot, const std::string& description,
-                    const std::function<void(SlotImage&)>& mutate,
+bool Core::editSlot(int slot, const std::string& description, const std::function<void(SlotImage&)>& mutate,
                     const std::string& coalesceKey) {
     if (slot < 0 || slot >= static_cast<int>(kSlotCount) || !mutate) return false;
     const auto s = static_cast<std::size_t>(slot);
@@ -408,30 +406,26 @@ bool Core::setFlag(int slot, std::uint32_t mask, bool on) {
             break;
         }
     }
-    return editSlot(slot, "Slot " + slotLetter(slot) + ": " + name + (on ? " on" : " off"),
-                    [&](SlotImage& image) {
-                        const std::uint32_t flags = slotFlags(image);
-                        setSlotFlags(image, on ? (flags | mask) : (flags & ~mask));
-                    });
+    return editSlot(slot, "Slot " + slotLetter(slot) + ": " + name + (on ? " on" : " off"), [&](SlotImage& image) {
+        const std::uint32_t flags = slotFlags(image);
+        setSlotFlags(image, on ? (flags | mask) : (flags & ~mask));
+    });
 }
 
 bool Core::setCoinScore(int slot, std::size_t course, int value) {
     if (course >= kMainCourseCount) return false;
     const int clamped = std::clamp(value, 0, 255);
-    return editSlot(slot,
-                    "Slot " + slotLetter(slot) + ": " + Courses[course] + " coins = " +
-                        std::to_string(clamped),
-                    [&](SlotImage& image) {
-                        image[slot_field::CoinScores + course] = static_cast<std::uint8_t>(clamped);
-                    },
-                    "coin:" + std::to_string(slot) + ":" + std::to_string(course));
+    return editSlot(
+        slot, "Slot " + slotLetter(slot) + ": " + Courses[course] + " coins = " + std::to_string(clamped),
+        [&](SlotImage& image) { image[slot_field::CoinScores + course] = static_cast<std::uint8_t>(clamped); },
+        "coin:" + std::to_string(slot) + ":" + std::to_string(course));
 }
 
 bool Core::setCourseStar(int slot, std::size_t course, int star, bool on) {
     if (course >= kMainCourseCount || star < 0 || star >= kStarsPerMainCourse) return false;
     return editSlot(slot,
-                    "Slot " + slotLetter(slot) + ": " + Courses[course] + " star " +
-                        std::to_string(star + 1) + (on ? " collected" : " cleared"),
+                    "Slot " + slotLetter(slot) + ": " + Courses[course] + " star " + std::to_string(star + 1) +
+                        (on ? " collected" : " cleared"),
                     [&](SlotImage& image) {
                         auto& byte = image[slot_field::CourseStars + course];
                         const auto mask = static_cast<std::uint8_t>(1U << static_cast<unsigned>(star));
@@ -443,16 +437,14 @@ bool Core::setCourseStar(int slot, std::size_t course, int star, bool on) {
 bool Core::setCourseStars(int slot, std::size_t course, std::uint8_t starBits) {
     if (course >= kMainCourseCount) return false;
     return editSlot(slot,
-                    "Slot " + slotLetter(slot) + ": " + Courses[course] +
-                        (starBits == 0 ? " cleared" : " completed"),
+                    "Slot " + slotLetter(slot) + ": " + Courses[course] + (starBits == 0 ? " cleared" : " completed"),
                     [&](SlotImage& image) { setCourseStarBits(image, course, starBits); });
 }
 
 bool Core::setSecretStarFlag(int slot, std::size_t secretIndex, bool on) {
     if (secretIndex >= kSecretStarCount) return false;
     const SecretStar& star = kSecretStars[secretIndex];
-    return editSlot(slot,
-                    "Slot " + slotLetter(slot) + ": " + star.name + (on ? " collected" : " cleared"),
+    return editSlot(slot, "Slot " + slotLetter(slot) + ": " + star.name + (on ? " collected" : " cleared"),
                     [&](SlotImage& image) { setSecretStar(image, star, on); });
 }
 
@@ -512,9 +504,7 @@ bool Core::resolvePair(std::size_t pair, bool usePrimary, std::string& error) {
     std::copy_n(after.begin() + static_cast<std::ptrdiff_t>(src.offset), src.size,
                 after.begin() + static_cast<std::ptrdiff_t>(dst.offset));
     error.clear();
-    applyEdit(std::string("Keep ") + (usePrimary ? "primary" : "backup") + " copy of " +
-                  pairTitle(pair),
-              after);
+    applyEdit(std::string("Keep ") + (usePrimary ? "primary" : "backup") + " copy of " + pairTitle(pair), after);
     return true;
 }
 
